@@ -22,9 +22,10 @@ exports.dependencies = {
     "creationix/mime@1.0.2",
     "creationix/hybrid-fs@0.1.1",
 }
+exports.description = "Static file servinging middleware for the moonmint framework."
 exports.tags = {"moonmint", "middleware", "static"}
 exports.author = { name = "Calvin Rose" }
-exports.website = "https://github.com/bakpakin/moonmint"
+exports.homepage = "https://github.com/bakpakin/moonmint"
 
 local mime = require('mime').getType
 local hybridfs = require 'hybrid-fs'

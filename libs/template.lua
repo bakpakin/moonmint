@@ -16,6 +16,15 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+exports.name = "bakpakin/moonmint-template"
+exports.version = "0.0.1"
+exports.dependencies = {}
+exports.description = "Templating library and middleware for the moonmint framework."
+exports.tags = {"moonmint", "template", "templating"}
+exports.license = "MIT"
+exports.author = { name = "Calvin Rose" }
+exports.homepage = "https://github.com/bakpakin/moonmint"
+
 local byte = string.byte
 
 local bracketTypes = {
@@ -136,5 +145,7 @@ return function(body)
     if not ret then
         print(code)
     end
+
     return ret
+
 end

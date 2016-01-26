@@ -16,6 +16,15 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+exports.name = "bakpakin/moonmint-router"
+exports.version = "0.0.1"
+exports.dependencies = {}
+exports.description = "Generic router middleware for the moonmint framework."
+exports.tags = {"moonmint", "router", "framework", "routing"}
+exports.license = "MIT"
+exports.author = { name = "Calvin Rose" }
+exports.homepage = "https://github.com/bakpakin/moonmint"
+
 local byte = string.byte
 local match = string.match
 local gmatch = string.gmatch
