@@ -17,10 +17,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 exports.name = "bakpakin/moonmint-server"
-exports.version = "0.0.1"
+exports.version = "0.0.1-1"
 exports.dependencies = {
     "bakpakin/moonmint-router@0.0.1",
     "bakpakin/moonmint-static@0.0.1",
+    "bakpakin/moonmint-request@0.0.1",
+    "bakpakin/moonmint-response@0.0.1",
     "creationix/coro-wrapper@1.0.0",
     "creationix/coro-net@1.1.1",
     "creationix/coro-tls@1.3.1",
@@ -42,6 +44,8 @@ local parseQuery = require('querystring').parse
 
 local router = require 'moonmint-router'
 local static = require 'moonmint-static'
+local request_mt = require 'moonmint-request'
+local response_mt = require 'moonmint-response'
 local setmetatable = setmetatable
 local rawget = rawget
 local rawset = rawset
@@ -56,70 +60,8 @@ if uv.constants.SIGPIPE then
   uv.new_signal():start("sigpipe")
 end
 
-local Headers_mt = {
-    __index = function(self, key)
-        if type(key) ~= "string" then
-            return rawget(self, key)
-        end
-        key = lower(key)
-        for i = 1, #self, 2 do
-            if self[i] == key then
-                return self[i + 1]
-            end
-        end
-    end,
-    __newindex = function(self, key, value)
-        if type(key) ~= "string" then
-            return rawset(self, key, value)
-        end
-        key = lower(key)
-        for i = #self - 1, 1, -2 do
-            if lower(self[i]) == key then
-                local len = #self
-                self[i] = self[len - 1]
-                self[i + 1] = self[len]
-                self[len] = nil
-                self[len - 1] = nil
-            end
-        end
-        if value == nil then return end
-        rawset(self, key, value)
-    end
-}
-
-local Request = {}
-local Request_mt = { __index = Request }
-
-local Response = {}
-local Response_mt = { __index = Response }
-
 local function makeDefaultResponse()
-    return setmetatable({
-        code = 404,
-        headers = setmetatable({}, Headers_mt),
-        body = "404 Not Found."
-    }, Response_mt)
 end
-
-function Response:send(body)
-    self.code = 200
-    self.body = body
-end
-
-local function reqresSetHeader(self, name, ...)
-    local value = (select("#", ...) == 1) and ... or {...}
-    self.headers[name] = value
-    return self
-end
-Request.setHeader = reqresSetHeader
-Response.setHeader = reqresSetHeader
-
-local function reqresGetHeader(self, name)
-    return self.header[name]
-end
-Request.getHeader = reqresGetHeader
-Response.getHeader = reqresGetHeader
-
 
 local Server = {}
 local Server_mt = {
@@ -143,11 +85,15 @@ function Server:handleRequest(head, input, socket)
         version = head.version,
         keepAlive = head.keepAlive,
         body = input
-    }, Request_mt)
+    }, request_mt)
     for i = 1, #head do
         req.headers[2 * i], req.headers[2 * i + 1] = head[i], head[i + 1]
     end
-    local res = makeDefaultResponse()
+    local res = setmetatable({
+        code = 404,
+        headers = setmetatable({}, Headers_mt),
+        body = "404 Not Found."
+    }, response_mt)
     self._router:doRoute(req, res, go)
     local out = {
         code = res.code,
