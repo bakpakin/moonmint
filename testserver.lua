@@ -1,10 +1,6 @@
--- In a real app, this should be "require 'moonmint-server'"
-local server = require "."
-local app = server()
+local app = require("moonmint")()
 
-app:bind{}
-
-app:get("/", function(req, res, go)
+app:get("/", function(req, res)
     res:send("Hello, World!")
 end)
 

@@ -94,6 +94,7 @@ function Server:handleConnection(rawRead, rawWrite, socket)
 end
 
 function Server:bind(options)
+    options = options or {}
     if not options.host then
         options.host = "127.0.0.1"
     end
@@ -108,6 +109,9 @@ end
 
 function Server:start()
     local bindings = self.bindings
+    if #bindings < 1 then
+        self:bind()
+    end
     for i = 1, #bindings do
         local binding = bindings[i]
         local tls = binding.tls
