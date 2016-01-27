@@ -16,13 +16,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-exports.name = 'bakpakin/moonmint-response'
-exports.version = '0.0.1-1'
+exports.name = "bakpakin/moonmint-response"
+exports.version = "0.0.1-1"
 exports.dependencies = {}
 exports.description = "HTTP Response object in the moonmint framework."
 exports.tags = {"moonmint", "response"}
-exports.license = "MIT"
 exports.author = { name = "Calvin Rose" }
+exports.license = "MIT"
 exports.homepage = "https://github.com/bakpakin/moonmint"
 
 local response = {}

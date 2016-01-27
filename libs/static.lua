@@ -25,6 +25,7 @@ exports.dependencies = {
 exports.description = "Static file servinging middleware for the moonmint framework."
 exports.tags = {"moonmint", "middleware", "static"}
 exports.author = { name = "Calvin Rose" }
+exports.licesnse = "MIT"
 exports.homepage = "https://github.com/bakpakin/moonmint"
 
 local mime = require('mime').getType
