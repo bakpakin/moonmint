@@ -1,23 +1,9 @@
---[[lit-meta
-name = "bakpakin/moonmint-request"
-version = "0.0.1-2"
-dependencies = {}
-description = "HTTP Request object in the moonmint framework."
-tags = {"moonmint", "request"}
-author = { name = "Calvin Rose" }
-license = "MIT"
-homepage = "https://github.com/bakpakin/moonmint"
-]]
-
-local setmetatable = setmetatable
+local lower = string.lower
 local type = type
 local rawset = rawset
 local rawget = rawget
 
-local request = {}
-local request_mt = { __index = request }
-
-local headers_mt = {
+return {
     __index = function(self, key)
         if type(key) ~= "string" then
             return rawget(self, key)
@@ -48,19 +34,3 @@ local headers_mt = {
     end
 }
 
-function request.new(t)
-    t = t or { headers = {} }
-    setmetatable(t.headers, headers_mt)
-    return setmetatable(t, request_mt)
-end
-
-function request:set(name, value)
-    self.headers[name] = value;
-    return self
-end
-
-function request:get(name)
-    return self.headers[name]
-end
-
-return request

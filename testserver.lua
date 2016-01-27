@@ -1,5 +1,5 @@
 -- In a real app, this should be "require 'moonmint-server'"
-local server = require "server"
+local server = require "."
 local app = server()
 
 app:bind{}

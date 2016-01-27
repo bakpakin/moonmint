@@ -1,24 +1,3 @@
---[[lit-meta
-name = "bakpakin/moonmint-server"
-version = "0.0.1-3"
-dependencies = {
-    "bakpakin/moonmint-router@0.0.1",
-    "bakpakin/moonmint-static@0.0.1",
-    "bakpakin/moonmint-request@0.0.1",
-    "bakpakin/moonmint-response@0.0.1",
-    "creationix/coro-wrapper@1.0.0",
-    "creationix/coro-net@1.1.1",
-    "creationix/coro-tls@1.3.1",
-    "luvit/http-codec@1.0.0",
-    "luvit/querystring@1.0.2",
-}
-description = "The main server in the moonmint framework."
-tags = {"moonmint", "server"}
-license = "MIT"
-author = { name = "Calvin Rose" }
-homepage = "https://github.com/bakpakin/moonmint"
-]]
-
 local createServer = require('coro-net').createServer
 local wrapper = require('coro-wrapper')
 local readWrap, writeWrap = wrapper.reader, wrapper.writer
@@ -28,8 +7,9 @@ local parseQuery = require('querystring').parse
 
 local router = require 'moonmint-router'
 local static = require 'moonmint-static'
-local request = require 'moonmint-request'
-local response = require 'moonmint-response'
+local request = require 'request'
+local response = require 'response'
+
 local setmetatable = setmetatable
 local rawget = rawget
 local rawset = rawset
@@ -42,9 +22,6 @@ local pcall = pcall
 local uv = require('uv')
 if uv.constants.SIGPIPE then
   uv.new_signal():start("sigpipe")
-end
-
-local function makeDefaultResponse()
 end
 
 local Server = {}

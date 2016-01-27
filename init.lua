@@ -19,12 +19,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local moonmint_mt = {}
 local moonmint = setmetatable({}, moonmint_mt)
 
-moonmint.server = require "moonmint-server"
+moonmint.server = require "./src/server"
+moonmint.request = require "./src/request"
+moonmint.response = require "./src/response"
+
 moonmint.template = require "moonmint-template"
 moonmint.router = require "moonmint-router"
 moonmint.static = require "moonmint-static"
-moonmint.request = require "moonmint-request"
-moonmint.response = require "moonmint-response"
 
 moonmint_mt.__call = function(self, ...)
     return moonmint.server(...)
