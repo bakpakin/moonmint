@@ -101,6 +101,11 @@ local function makeDefaultResponse()
     }, Response_mt)
 end
 
+function Response:send(body)
+    self.code = 200
+    self.body = body
+end
+
 local function reqresSetHeader(self, name, ...)
     local value = (select("#", ...) == 1) and ... or {...}
     self.headers[name] = value
@@ -124,7 +129,7 @@ local Server_mt = {
 local function makeServer()
     return setmetatable({
         bindings = {},
-        handlers = {}
+        _router = router()
     }, Server_mt)
 end
 
