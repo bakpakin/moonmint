@@ -17,7 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 exports.name = "bakpakin/moonmint-static"
-exports.version = "0.0.1-1"
+exports.version = "0.0.1-2"
 exports.dependencies = {
     "creationix/mime@0.1.2",
     "creationix/hybrid-fs@0.1.1",
