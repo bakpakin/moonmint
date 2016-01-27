@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-server"
-version = "0.0.1-2"
+version = "0.0.1-3"
 dependencies = {
     "bakpakin/moonmint-router@0.0.1",
     "bakpakin/moonmint-static@0.0.1",
@@ -28,8 +28,8 @@ local parseQuery = require('querystring').parse
 
 local router = require 'moonmint-router'
 local static = require 'moonmint-static'
-local request_mt = require 'moonmint-request'
-local response_mt = require 'moonmint-response'
+local request = require 'moonmint-request'
+local response = require 'moonmint-response'
 local setmetatable = setmetatable
 local rawget = rawget
 local rawset = rawset
@@ -61,23 +61,23 @@ end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
 function Server:handleRequest(head, input, socket)
-    local req = setmetatable({
+    local req = request.new {
         socket = socket,
         method = head.method,
-        path = head.path,
-        headers = setmetatable({}, Header_mt),
+        path = head.path or "",
+        headers = {},
         version = head.version,
         keepAlive = head.keepAlive,
         body = input
-    }, request_mt)
+    }
     for i = 1, #head do
         req.headers[2 * i], req.headers[2 * i + 1] = head[i], head[i + 1]
     end
-    local res = setmetatable({
+    local res = response.new {
         code = 404,
-        headers = setmetatable({}, Headers_mt),
+        headers = {},
         body = "404 Not Found."
-    }, response_mt)
+    }
     self._router:doRoute(req, res, go)
     local out = {
         code = res.code,

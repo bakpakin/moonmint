@@ -9,6 +9,7 @@ license = "MIT"
 homepage = "https://github.com/bakpakin/moonmint"
 ]]
 
+local setmetatable = setmetatable
 local type = type
 local rawset = rawset
 local rawget = rawget
@@ -47,6 +48,12 @@ local headers_mt = {
     end
 }
 
+function response.new(t)
+    t = t or { headers = {} }
+    setmetatable(t.headers, headers_mt)
+    return setmetatable(t, response_mt)
+end
+
 function response:set(name, value)
     self.headers[name] = value;
     return self
@@ -61,4 +68,4 @@ function response:send(body)
     self.body = body
 end
 
-return response_mt
+return response
