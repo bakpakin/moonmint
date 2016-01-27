@@ -21,11 +21,11 @@ exports.version = "0.0.1"
 exports.dependencies = {
     "bakpakin/moonmint-router@0.0.1",
     "bakpakin/moonmint-static@0.0.1",
-     "creationix/coro-wrapper@1.0.0",
-     "creationix/coro-net@1.1.1",
-     "creationix/coro-tls@1.3.1",
-     "luvit/http-codec@1.0.0",
-     "luvit/querystring@1.0.2",
+    "creationix/coro-wrapper@1.0.0",
+    "creationix/coro-net@1.1.1",
+    "creationix/coro-tls@1.3.1",
+    "luvit/http-codec@1.0.0",
+    "luvit/querystring@1.0.2",
 }
 exports.description = "The main server in the moonmint framework."
 exports.tags = {"moonmint", "server"}

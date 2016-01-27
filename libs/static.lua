@@ -19,7 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 exports.name = "bakpakin/moonmint-static"
 exports.version = "0.0.1-1"
 exports.dependencies = {
-    "creationix/mime@1.0.2",
+    "creationix/mime@0.1.2",
     "creationix/hybrid-fs@0.1.1",
 }
 exports.description = "Static file servinging middleware for the moonmint framework."
