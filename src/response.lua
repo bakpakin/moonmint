@@ -1,5 +1,5 @@
 local setmetatable = setmetatable
-local headers_mt = require 'httpheader'
+local headers_mt = require './httpheader'
 
 local response = {}
 local response_mt = { __index = response }

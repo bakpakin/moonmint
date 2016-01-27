@@ -7,8 +7,8 @@ local parseQuery = require('querystring').parse
 
 local router = require 'moonmint-router'
 local static = require 'moonmint-static'
-local request = require 'request'
-local response = require 'response'
+local request = require './request'
+local response = require './response'
 
 local setmetatable = setmetatable
 local rawget = rawget
