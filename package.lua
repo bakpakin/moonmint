@@ -14,7 +14,6 @@ return {
         "luvit/http-codec@1.0.0",
         "luvit/querystring@1.0.2",
         -- Internal Deps
-        "bakpakin/moonmint-server@0.0.1",
         "bakpakin/moonmint-router@0.0.1",
         "bakpakin/moonmint-static@0.0.1",
         "bakpakin/moonmint-template@0.0.1"
