@@ -23,6 +23,8 @@ moonmint.server = require "moonmint-server"
 moonmint.template = require "moonmint-template"
 moonmint.router = require "moonmint-router"
 moonmint.static = require "moonmint-static"
+moonmint.request = require "moonmint-request"
+moonmint.response = require "moonmint-response"
 
 moonmint_mt.__call = function(self, ...)
     return moonmint.server(...)

@@ -10,6 +10,8 @@ return {
         "bakpakin/moonmint-server@0.0.1",
         "bakpakin/moonmint-router@0.0.1",
         "bakpakin/moonmint-static@0.0.1",
+        "bakpakin/moonmint-request@0.0.1",
+        "bakpakin/moonmint-response@0.0.1",
         "bakpakin/moonmint-template@0.0.1"
     },
     files = {
