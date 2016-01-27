@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-static"
-version = "0.0.1-3"
+version = "0.0.1-4"
 dependencies = {
     "creationix/mime@0.1.2",
     "creationix/hybrid-fs@0.1.1",
@@ -33,9 +33,9 @@ local Static_mt = {
     __index = Static
 }
 
-function Static:doRoute(req, res, go)
+function Static:doRoute(req, res)
 
-    if req.method ~= "GET" then return go() end
+    if req.method ~= "GET" then return end
     local path = match(req.path, "^[^?#]*")
     if byte(path) == 47 then
         path = path:sub(2)
@@ -46,7 +46,7 @@ function Static:doRoute(req, res, go)
     local nocache = self.nocache
 
     local stat = fs.stat(path)
-    if not stat then return go() end
+    if not stat then return end
 
     if stat.type == "directory" then
         if byte(path, -1) == 47 then
@@ -55,7 +55,7 @@ function Static:doRoute(req, res, go)
             path = path .. "/index.html"
         end
         stat = fs.stat(path);
-        if not stat then return go() end
+        if not stat then return end
     end
 
     local cachedResponse = cache[path]
@@ -67,16 +67,14 @@ function Static:doRoute(req, res, go)
     else
         cachedResponse = makeCacheEntry(path)
         if not cachedResponse then
-            if go then
-                return go()
-            end
+            return
         end
         if not nocache then cache[path] = cachedResponse end
         res.code = 200
         res.body = cachedResponse.body
         res.mime = cachedResponse.mime
     end
-
+    res:send()
 end
 
 Static_mt.__call = Static.doRoute

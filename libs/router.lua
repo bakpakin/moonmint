@@ -17,7 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 exports.name = "bakpakin/moonmint-router"
-exports.version = "0.0.1-1"
+exports.version = "0.0.1-2"
 exports.dependencies = {}
 exports.description = "Generic router middleware for the moonmint framework."
 exports.tags = {"moonmint", "router", "framework", "routing"}
@@ -35,18 +35,14 @@ local format = string.format
 local concat = table.concat
 local setmetatable = setmetatable
 
-local router = setmetatable({}, {
-    __call = function(self, ...)
-        return self.new(...)
-    end
-})
-
 local router_mt
 
---- Create a new Router.
-function router.new()
-    return setmetatable({}, router_mt)
-end
+-- Calling router creates a new router
+local router = setmetatable({}, {
+    __call = function(self)
+        return setmetatable({}, router_mt)
+    end
+})
 
 -- Helper function to compile a function that matches certain hosts. Used
 -- internally by router:route
@@ -120,20 +116,24 @@ local function addParams(req, params)
 end
 
 -- Helper function to wrap middleware under a sub-route.
-local function subroute(self, path, middleware)
+local function subroute(self, path, ...)
     local pat, captures = makeRoutePattern(path)
     pat = sub(pat, 1, -4) .. "/(.+)/?$"
-    return self:use(function(req, res, go)
+
+    local middleware
+    if select("#", ...) > 1 then
+        middleware = router():use(...)
+    else
+        middleware = ...
+    end
+
+    return self:use(function(req, res)
         local oldPath = req.path
         local matches = { match(oldPath, pat) }
         if #matches == 0 then
-            return go()
+            return
         end
         local newPath = matches[#matches]
-        local resetPath = not req.fullpath
-        if resetPath then
-            req.fullpath = oldPath
-        end
         req.path = newPath
         req.params = req.params or {}
         local reqp = req.params
@@ -141,30 +141,21 @@ local function subroute(self, path, middleware)
             reqp[#reqp + 1] = matches[i]
             reqp[captures[i]] = matches[i]
         end
-        local goCalled = false
-        local function mwGo()
-            goCalled = true
-        end
-        middleware(req, res, mwGo)
+        middleware(req, res)
 
         -- Reset the request path no matter what, even if the event is consumed.
         req.path = oldPath
-        if resetPath then
-            req.fullpath = nil
-        end
-        if goCalled then
-            return go()
-        end
     end)
 end
 
 --- Make this router use middleware. Returns the middleware.
-function router:use(middleware, b)
-    if b then
-        -- middleware is actually a path, and b is the middleware
-        return subroute(self, middleware, b)
+function router:use(...)
+    if type(...) == "string" then
+        return subroute(self, ...)
     end
-    self[#self + 1] = middleware
+    for i = 1, #select("#", ...) do
+        self[#self + 1] = select(i, ...)
+    end
     return self
 end
 
@@ -182,31 +173,24 @@ function router:route(options, callback)
     local checkMethod = routeMethod ~= "*"
     local routeF = options.path and compileRoute(options.path)
     local hostF = options.host and compileHost(options.host)
-    return self:use(function(req, res, go)
+    return self:use(function(req, res)
         if checkMethod then
-            if req.method ~= routeMethod then return go() end
+            if req.method ~= routeMethod then return end
         end
-        if hostF and not hostF(req.host) then return go() end
+        if hostF and not hostF(req.host) then return end
         local matches = routeF and routeF(req.path)
-        if routeF and not matches then return go() end
+        if routeF and not matches then return end
         addParams(req, matches)
-        return callback(req, res, go)
+        return callback(req, res)
     end)
 end
 
 --- Routes the request and response through the appropriate middlewares.
-function router:doRoute(req, res, go)
-    local i = 0
-    local function run()
-        i = i + 1
-        local mw = self[i]
-        if mw then
-            return mw(req, res, run)
-        elseif go then
-            return go()
-        end
+function router:doRoute(req, res)
+    for i = 1, #self do
+        if res.done then break end
+        self[i](req, res)
     end
-    return run()
 end
 
 -- Helper to make aliases for different common routes.

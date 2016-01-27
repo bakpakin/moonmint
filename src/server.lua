@@ -42,7 +42,6 @@ function Server:handleRequest(head, input, socket)
 end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
-local function EMPTY_FUNC() end
 function Server:handleConnection(rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
@@ -71,10 +70,11 @@ function Server:handleConnection(rawRead, rawWrite, socket)
             socket = socket,
             code = 404,
             headers = {},
-            body = "404 Not Found."
+            body = "404 Not Found.",
+            done = false
         }
         -- Use middleware
-        self._router:doRoute(req, res, EMPTY_FUNC)
+        self._router:doRoute(req, res)
 
         -- Modify the res table in-place to conform to luvit http-codec
         res:set("content-length", res.body and #res.body or 0)

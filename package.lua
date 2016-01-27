@@ -1,6 +1,6 @@
 return {
     name = "bakpakin/moonmint",
-    version = "0.0.1-7",
+    version = "0.0.1-8",
     description = "Web Framework for lit.",
     tags = { "lua", "lit", "luvit", "moonmint", "router", "server", "framework"},
     license = "MIT",
@@ -12,7 +12,6 @@ return {
         "creationix/coro-net@1.1.1",
         "creationix/coro-tls@1.3.1",
         "luvit/http-codec@1.0.0",
-        "luvit/querystring@1.0.2",
         -- Internal Deps
         "bakpakin/moonmint-router@0.0.1",
         "bakpakin/moonmint-static@0.0.1",
