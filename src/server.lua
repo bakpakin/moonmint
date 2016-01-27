@@ -38,35 +38,11 @@ end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
 function Server:handleRequest(head, input, socket)
-    local req = request.new {
-        socket = socket,
-        method = head.method,
-        path = head.path or "",
-        headers = {},
-        version = head.version,
-        keepAlive = head.keepAlive,
-        body = input
-    }
-    for i = 1, #head do
-        req.headers[2 * i], req.headers[2 * i + 1] = head[i], head[i + 1]
-    end
-    local res = response.new {
-        code = 404,
-        headers = {},
-        body = "404 Not Found."
-    }
-    self._router:doRoute(req, res, go)
-    local out = {
-        code = res.code,
-        keepAlive = res.keepAlive
-    }
-    for i = 1, #res.headers / 2 do
-        out[i] = {res.headers[2 * i], res.headers[2 * i + 1]}
-    end
-    return out, res.body, res.upgrade
+    return res
 end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
+local function EMPTY_FUNC() end
 function Server:handleConnection(rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
@@ -79,12 +55,37 @@ function Server:handleConnection(rawRead, rawWrite, socket)
                 break
             end
         end
-        local res, body, upgrade = self:handleRequest(head, #parts > 0 and table.concat(parts) or nil, socket)
-        write(res)
-        if upgrade then
-            return upgrade(read, write, updateDecoder, updateEncoder, socket)
+        local body = #parts > 0 and table.concat(parts) or nil
+        local req = request.new {
+            app = self,
+            socket = socket,
+            method = head.method,
+            path = head.path or "",
+            headers = head,
+            version = head.version,
+            keepAlive = head.keepAlive,
+            body = body
+        }
+        local res = response.new {
+            app = self,
+            socket = socket,
+            code = 404,
+            headers = {},
+            body = "404 Not Found."
+        }
+        -- Use middleware
+        self._router:doRoute(req, res, EMPTY_FUNC)
+
+        -- Modify the res table in-place to conform to luvit http-codec
+        res:set("content-length", res.body and #res.body or 0)
+        rawset(res.headers, "code", res.code)
+        write(res.headers)
+        rawset(res.headers, "code", nil)
+
+        if res.upgrade then
+            return res.upgrade(read, write, updateDecoder, updateEncoder, socket)
         end
-        write(body)
+        write(res.body)
         if not (res.keepAlive and head.keepAlive) then
             break
         end

@@ -17,7 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 exports.name = "bakpakin/moonmint-router"
-exports.version = "0.0.1"
+exports.version = "0.0.1-1"
 exports.dependencies = {}
 exports.description = "Generic router middleware for the moonmint framework."
 exports.tags = {"moonmint", "router", "framework", "routing"}
@@ -124,8 +124,7 @@ local function subroute(self, path, middleware)
     local pat, captures = makeRoutePattern(path)
     pat = sub(pat, 1, -4) .. "/(.+)/?$"
     return self:use(function(req, res, go)
-        local pathKey = req.url and "url" or "path"
-        local oldPath = req[pathKey]
+        local oldPath = req.path
         local matches = { match(oldPath, pat) }
         if #matches == 0 then
             return go()
@@ -135,7 +134,7 @@ local function subroute(self, path, middleware)
         if resetPath then
             req.fullpath = oldPath
         end
-        req[pathKey] = newPath
+        req.path = newPath
         req.params = req.params or {}
         local reqp = req.params
         for i = 1, #captures do
@@ -149,7 +148,7 @@ local function subroute(self, path, middleware)
         middleware(req, res, mwGo)
 
         -- Reset the request path no matter what, even if the event is consumed.
-        req[pathKey] = oldPath
+        req.path = oldPath
         if resetPath then
             req.fullpath = nil
         end
@@ -188,7 +187,7 @@ function router:route(options, callback)
             if req.method ~= routeMethod then return go() end
         end
         if hostF and not hostF(req.host) then return go() end
-        local matches = routeF and routeF(req.url or req.path)
+        local matches = routeF and routeF(req.path)
         if routeF and not matches then return go() end
         addParams(req, matches)
         return callback(req, res, go)
@@ -197,16 +196,12 @@ end
 
 --- Routes the request and response through the appropriate middlewares.
 function router:doRoute(req, res, go)
-    local run
-    local i = 1
-    local function runNext()
+    local i = 0
+    local function run()
         i = i + 1
-        return run()
-    end
-    function run()
         local mw = self[i]
         if mw then
-            return mw(req, res, runNext)
+            return mw(req, res, run)
         elseif go then
             return go()
         end
