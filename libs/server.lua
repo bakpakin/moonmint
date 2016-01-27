@@ -145,7 +145,7 @@ function Server:handleRequest(head, input, socket)
         body = input
     }, Request_mt)
     for i = 1, #head do
-        req.headers[2 * i], req.header[2 * i + 1] = head[i], head[i + 1]
+        req.headers[2 * i], req.headers[2 * i + 1] = head[i], head[i + 1]
     end
     local res = makeDefaultResponse()
     self._router:doRoute(req, res, go)
@@ -211,10 +211,10 @@ function Server:start()
                     key = assert(tls.key, "tls key required"),
                     cert = assert(tls.cert, "tls cert required")
                 })
-                return handleConnection(newRead, newWrite, socket)
+                return self:handleConnection(newRead, newWrite, socket)
             end
         else
-            callback = handleConnection
+            callback = function(...) return self:handleConnection(...) end
         end
         createServer(binding, callback)
         print(("HTTP server listening at http%s://%s:%d..."):format(binding.tls and "s" or "", binding.host, binding.port))
