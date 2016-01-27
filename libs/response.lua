@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-response"
-version = "0.0.1-1"
+version = "0.0.1-2"
 dependencies = {}
 description = "HTTP Response object in the moonmint framework."
 tags = {"moonmint", "response"}
@@ -66,6 +66,11 @@ end
 function response:send(body)
     self.code = 200
     self.body = body
+end
+
+function response:redirect(location)
+    self.code = 302
+    self.headers["Location"] = location
 end
 
 return response
