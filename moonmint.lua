@@ -16,6 +16,16 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local moonmint = {}
+local moonmint_mt = {}
+local moonmint = setmetatable({}, moonmint_mt)
+
+moonmint.server = require "moonmint-server"
+moonmint.template = require "moonmint-template"
+moonmint.router = require "moonmint-router"
+moonmint.static = require "moonmint-static"
+
+moonmint_mt.__call = function(self, ...)
+    return moonmint.server(...)
+end
 
 return moonmint
