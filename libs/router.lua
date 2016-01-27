@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-router"
-version = "0.0.1-2"
+version = "0.0.1-3"
 dependencies = {}
 description = "Generic router middleware for the moonmint framework."
 tags = {"moonmint", "router", "framework", "routing"}
