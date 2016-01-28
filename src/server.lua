@@ -3,10 +3,9 @@ local wrapper = require('coro-wrapper')
 local readWrap, writeWrap = wrapper.reader, wrapper.writer
 local httpCodec = require('http-codec')
 local tlsWrap = require('coro-tls').wrap
-local parseQuery = require('querystring').parse
 
-local router = require 'moonmint-router'
-local static = require 'moonmint-static'
+local router = require './router'
+local static = require './static'
 local request = require './request'
 local response = require './response'
 
@@ -21,7 +20,7 @@ local pcall = pcall
 
 local uv = require('uv')
 if uv.constants.SIGPIPE then
-  uv.new_signal():start("sigpipe")
+    uv.new_signal():start("sigpipe")
 end
 
 local Server = {}
@@ -34,11 +33,6 @@ local function makeServer()
         bindings = {},
         _router = router()
     }, Server_mt)
-end
-
--- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
-function Server:handleRequest(head, input, socket)
-    return res
 end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
@@ -77,7 +71,6 @@ function Server:handleConnection(rawRead, rawWrite, socket)
         self._router:doRoute(req, res)
 
         -- Modify the res table in-place to conform to luvit http-codec
-        res:set("content-length", res.body and #res.body or 0)
         rawset(res.headers, "code", res.code)
         write(res.headers)
         rawset(res.headers, "code", nil)
@@ -85,7 +78,9 @@ function Server:handleConnection(rawRead, rawWrite, socket)
         if res.upgrade then
             return res.upgrade(read, write, updateDecoder, updateEncoder, socket)
         end
+
         write(res.body)
+
         if not (res.keepAlive and head.keepAlive) then
             break
         end

@@ -23,9 +23,9 @@ moonmint.server = require "./src/server"
 moonmint.request = require "./src/request"
 moonmint.response = require "./src/response"
 
-moonmint.template = require "moonmint-template"
-moonmint.router = require "moonmint-router"
-moonmint.static = require "moonmint-static"
+moonmint.template = require "./src/template"
+moonmint.router = require "./src/router"
+moonmint.static = require "./src/static"
 
 moonmint_mt.__call = function(self, ...)
     return moonmint.server(...)

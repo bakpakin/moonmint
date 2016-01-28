@@ -21,7 +21,7 @@ end
 
 function response:send(body)
     self.code = 200
-    self.body = body or res.body or ""
+    self.body = body or self.body or ""
     self.done = true
     return self
 end
