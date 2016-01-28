@@ -21,12 +21,16 @@ end
 
 function response:send(body)
     self.code = 200
-    self.body = body
+    self.body = body or res.body or ""
+    self.done = true
+    return self
 end
 
 function response:redirect(location)
     self.code = 302
     self.headers["Location"] = location
+    self.done = true
+    return self
 end
 
 return response
