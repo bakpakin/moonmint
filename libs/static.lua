@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-static"
-version = "0.0.1-5"
+version = "0.0.1-6"
 dependencies = {
     "creationix/mime@0.1.2",
     "creationix/hybrid-fs@0.1.1",
@@ -66,7 +66,7 @@ function Static:doRoute(req, res)
         res.body = cachedResponse.body
         res.mime = cachedResponse.mime
     else
-        cachedResponse = makeCacheEntry(path)
+        cachedResponse = makeCacheEntry(fs, path, stat)
         if not cachedResponse then
             return
         end
