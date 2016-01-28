@@ -135,7 +135,7 @@ end
 
 function Server:static(urlpath, realpath)
     realpath = realpath or urlpath
-    self._router:use(urlpath, static(realpath))
+    self:use(urlpath, static(realpath))
     return self
 end
 

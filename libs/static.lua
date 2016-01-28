@@ -1,6 +1,6 @@
 --[[lit-meta
 name = "bakpakin/moonmint-static"
-version = "0.0.1-4"
+version = "0.0.1-5"
 dependencies = {
     "creationix/mime@0.1.2",
     "creationix/hybrid-fs@0.1.1",
@@ -16,6 +16,7 @@ local mime = require('mime').getType
 local hybridfs = require 'hybrid-fs'
 local byte = string.byte
 local setmetatable = setmetatable
+local match = string.match
 
 local function makeCacheEntry(fs, path, stat)
     local body = fs.readFile(path)
