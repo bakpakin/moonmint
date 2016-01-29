@@ -116,7 +116,7 @@ local function queryDecode(str)
         ret = ret or {}
         local keyDecoded = urlDecode(key)
         local valueDecoded = urlDecode(value)
-        local valueQueryDecoded = queryDecode(value)
+        local valueQueryDecoded = queryDecode(valueDecoded)
         if valueQueryDecoded then valueDecoded = valueQueryDecoded end
 
         -- Attempt number conversion
