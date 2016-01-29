@@ -1,6 +1,6 @@
 return {
     name = "bakpakin/moonmint",
-    version = "0.0.2-1",
+    version = "0.0.2-2",
     description = "Web Framework for lit.",
     tags = { "lua", "lit", "luvit", "moonmint", "router", "server", "framework"},
     license = "MIT",
@@ -13,7 +13,7 @@ return {
         "creationix/coro-net@1.1.1",
         "creationix/coro-tls@1.3.1",
         "luvit/http-codec@1.0.0",
-        "luvit/json@0.1.0"
+        "luvit/json@2.5.1"
     },
     files = {
         "package.lua",
