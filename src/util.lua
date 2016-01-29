@@ -126,11 +126,20 @@ local function cookieDecode(str)
 
 end
 
+local print = print
+local function logger(req, res)
+    local useragent = req:get("user-agent")
+    if useragent then
+        print(format("%s %s %s"), req.method, req.path, useragent)
+    end
+end
+
 return {
     urlEncode = urlEncode,
     urlDecode = urlDecode,
     queryEncode = queryEncode,
     queryDecode = queryDecode,
     cookieEncode = cookieEncode,
-    cookieDecode = cookieDecodel
+    cookieDecode = cookieDecodel,
+    logger = logger
 }
