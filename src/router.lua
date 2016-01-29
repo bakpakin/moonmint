@@ -135,7 +135,11 @@ end
 --- Make this router use middleware. Returns the middleware.
 function router:use(...)
     if type(...) == "string" then
-        return subroute(self, ...)
+        if ... == "/" then
+            return self:use(select(2, ...))
+        else
+            return subroute(self, ...)
+        end
     end
     for i = 1, select("#", ...) do
         self[#self + 1] = select(i, ...)
