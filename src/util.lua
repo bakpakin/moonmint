@@ -4,6 +4,7 @@ local byte = string.byte
 local gsub = string.gsub
 local char = string.char
 local upper = string.upper
+local format = string.format
 local floor = math.floor
 local concat = table.concat
 local tostring = tostring
@@ -49,7 +50,7 @@ local function urlEncode(str)
 end
 
 -- Converts a url-string component into a Lua string by unescaping escaped characters in
--- th url. Maps 1 to 1 with util.urlEncode
+-- the url. Maps 1 to 1 with util.urlEncode
 local function urlDecode(str)
     if not match(str, urlValidComponent) then
         error("Invlaid URL Component.")
@@ -57,19 +58,6 @@ local function urlDecode(str)
     local ret = gsub(str, "%+", " ")
     ret = gsub(ret, "%%[0-9a-fA-F][0-9a-fA-F]", urlDecodeFilter)
     return ret
-end
-
--- Converts a Lua object to JSON. Supprts all key value types except functions,
--- userdata, and threads. Tables cannot be cyclic.
-local function jsonEncode(object)
-
-end
-
--- Converts a string of JSON into a Lua table of value. The table or value will have no
--- function, thread, or userdata keys or values, and will be a directed
--- acyclic graph or single value.
-local function jsonDecode(str)
-
 end
 
 -- Encode a Lua object as query string in a URL. The returned query string can be appended
@@ -141,8 +129,6 @@ end
 return {
     urlEncode = urlEncode,
     urlDecode = urlDecode,
-    jsonEncode = jsonEncode,
-    jsonDecode = jsonDecode,
     queryEncode = queryEncode,
     queryDecode = queryDecode,
     cookieEncode = cookieEncode,
