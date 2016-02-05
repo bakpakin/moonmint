@@ -38,7 +38,7 @@ local Static_mt = {
     __index = Static
 }
 
-function Static:doRoute(req, resi, go)
+function Static:doRoute(req, res, go)
 
     if req.method ~= "GET" then return end
     local path = match(req.path, "/?([^%?%#]*)")
