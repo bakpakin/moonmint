@@ -69,7 +69,6 @@ function Server:handleConnection(rawRead, rawWrite, socket)
         end
         local body = #parts > 0 and table.concat(parts) or nil
         local url = head.path or ""
-        print(url)
         local path, rawquery = match(url, "^([^%?]*)[%?]?(.*)$")
         local req = request {
             app = self,
