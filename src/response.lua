@@ -1,14 +1,35 @@
+--[[
+Copyright (c) 2015 Calvin Rose
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+]]
+
 local setmetatable = setmetatable
 local headers_mt = require './httpheader'
 
-local response = {}
-local response_mt = { __index = response }
+local response_mt
 
-function response.new(t)
-    t = t or { headers = {} }
-    setmetatable(t.headers, headers_mt)
-    return setmetatable(t, response_mt)
-end
+local response = setmetatable({}, {
+    __call = function(self, t)
+        t = t or { headers = {} }
+        setmetatable(t.headers, headers_mt)
+        return setmetatable(t, response_mt)
+    end
+})
+
+response_mt = { __index = response }
 
 function response:set(name, value)
     self.headers[name] = value;
@@ -19,18 +40,20 @@ function response:get(name)
     return self.headers[name]
 end
 
+local noop = function() end
+
 function response:send(body)
     self.code = 200
     self.body = body or self.body or ""
     self.done = true
-    return self
+    return (self.go or noop)()
 end
 
 function response:redirect(location)
     self.code = 302
     self.headers["Location"] = location
     self.done = true
-    return self
+    return (self.go or noop)()
 end
 
 return response

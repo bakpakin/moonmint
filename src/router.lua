@@ -1,3 +1,21 @@
+--[[
+Copyright (c) 2015 Calvin Rose
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+]]
+
 --[[lit-meta
 name = "bakpakin/moonmint-router"
 version = "0.0.1-3"
@@ -60,7 +78,7 @@ local function makeRoutePattern(urlPattern)
             tab[#tab + 1] = gsub(part, "[%%%^%$%(%)%.%[%]%*%+%-%?]", "%%%1")
         end
     end
-    local pattern = "^/?" .. concat(tab, "/") .. "/?$"
+    local pattern = "^/" .. concat(tab, "/") .. "/?$"
     return pattern, pathCaptures
 end
 
@@ -102,7 +120,7 @@ end
 -- Helper function to wrap middleware under a sub-route.
 local function subroute(self, path, ...)
     local pat, captures = makeRoutePattern(path)
-    pat = sub(pat, 1, -4) .. "/(.+)/?$"
+    pat = sub(pat, 1, -4) .. "/(.*)/?$"
 
     local middleware
     if select("#", ...) > 1 then
@@ -111,13 +129,14 @@ local function subroute(self, path, ...)
         middleware = ...
     end
 
-    return self:use(function(req, res)
+    return self:use(function(req, res, go)
         local oldPath = req.path
         local matches = { match(oldPath, pat) }
         if #matches == 0 then
-            return
+            return go()
         end
         local newPath = matches[#matches]
+        if newPath == "" then newPath = "/" end
         req.path = newPath
         req.params = req.params or {}
         local reqp = req.params
@@ -125,10 +144,16 @@ local function subroute(self, path, ...)
             reqp[#reqp + 1] = matches[i]
             reqp[captures[i]] = matches[i]
         end
-        middleware(req, res)
+        local goCalled = false
+        middleware(req, res, function()
+            goCalled = true
+        end)
 
         -- Reset the request path no matter what, even if the event is consumed.
         req.path = oldPath
+        if goCalled then
+            return go()
+        end
     end)
 end
 
@@ -161,24 +186,32 @@ function router:route(options, callback)
     local checkMethod = routeMethod ~= "*"
     local routeF = options.path and compileRoute(options.path)
     local hostF = options.host and compileHost(options.host)
-    return self:use(function(req, res)
+    return self:use(function(req, res, go)
         if checkMethod then
-            if req.method ~= routeMethod then return end
+            if req.method ~= routeMethod then return go() end
         end
-        if hostF and not hostF(req.host) then return end
+        if hostF and not hostF(req.host) then return go() end
         local matches = routeF and routeF(req.path)
-        if routeF and not matches then return end
+        if routeF and not matches then return go() end
         addParams(req, matches)
-        return callback(req, res)
+        return callback(req, res, go)
     end)
 end
 
 --- Routes the request and response through the appropriate middlewares.
-function router:doRoute(req, res)
-    for i = 1, #self do
-        if res.done then break end
-        self[i](req, res)
+function router:doRoute(req, res, go)
+    local i = 0
+    local function run()
+        i = i + 1
+        local mw = self[i]
+        if mw and not res.done then
+            res.go = run
+            return mw(req, res, run)
+        elseif go then
+            return go()
+        end
     end
+    return run()
 end
 
 -- Helper to make aliases for different common routes.
