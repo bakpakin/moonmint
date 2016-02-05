@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --[[lit-meta
 name = "bakpakin/moonmint-template"
-version = "0.0.1-1"
+version = "0.0.1-2"
 dependencies = {}
 description = "Templating library and middleware for the moonmint framework."
 tags = {"moonmint", "template", "templating"}

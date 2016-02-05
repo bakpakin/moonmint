@@ -144,6 +144,19 @@ local function cookieDecode(str)
 
 end
 
+-- Symmetric encryption and decryption
+local function encrypt(str, secret)
+
+end
+
+local function decrypt(str, secret)
+
+end
+
+local function cryptrandom()
+
+end
+
 local print = print
 local function logger(req, res, go)
     local useragent = req:get("user-agent")

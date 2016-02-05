@@ -38,16 +38,14 @@ local request = setmetatable({}, {
 
 local lazy_loaders = {
     query = function(self)
-        local path, rawquery = match(self.url, "^(.+)[%?%#](.*)$")
-        if path then
-            rawset(self, "rawquery", rawquery)
-            rawset(self, "query", queryDecode(rawQuery))
-        else
-            rawset(self, "query", {})
+        if self.rawquery then
+            rawset(self, "query", queryDecode(self.rawquery))
         end
     end,
     json = function(self)
-        rawset(self, "json", json.decode(self.body))
+        if self.body then
+            rawset(self, "json", json.decode(self.body))
+        end
     end
 }
 

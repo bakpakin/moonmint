@@ -35,6 +35,7 @@ local select = select
 local tremove = table.remove
 local lower = string.lower
 local pcall = pcall
+local match = string.match
 
 local uv = require('uv')
 if uv.constants.SIGPIPE then
@@ -67,11 +68,16 @@ function Server:handleConnection(rawRead, rawWrite, socket)
             end
         end
         local body = #parts > 0 and table.concat(parts) or nil
+        local url = head.path or ""
+        print(url)
+        local path, rawquery = match(url, "^([^%?]*)[%?]?(.*)$")
         local req = request {
             app = self,
             socket = socket,
             method = head.method,
-            path = head.path or "",
+            url = url,
+            path = path,
+            rawquery = rawquery,
             headers = head,
             version = head.version,
             keepAlive = head.keepAlive,
