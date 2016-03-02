@@ -51,6 +51,18 @@ local function skipToCharWithEscapes(str, i, ch, escape)
     return i
 end
 
+local function skipToBracket(str, i)
+    local j = i
+    while true do
+        j = skipToCharWithEscapes(str, j, 123)
+        if not j or j == 0 then return 0 end
+        if bracketTypes[byte(str, j + 1)] or byte(str, j + 1) == 45 then
+            return j
+        end
+        j = j + 1
+    end
+end
+
 local function getchr(c)
 	return "\\" .. c:byte()
 end
@@ -78,13 +90,13 @@ local function primaryEscape(str)
     while true do
 
         -- Skip to an open bracket
-        local j = skipToCharWithEscapes(str, index, 123)
+        local j = skipToBracket(str, index)
         local bnext = str:sub(index, j - 1)
         if trim_whitespace then
             bnext = trim_start(bnext)
         end
         buffer[#buffer + 1] = bnext
-        if j == 0 then return buffer end
+        if not j or j == 0 then break end
 
         -- Get the bracket type
         index = j + 1
@@ -96,14 +108,13 @@ local function primaryEscape(str)
         end
         local btypeCloser = btypeClosers[btype] or btype
         local btypename = bracketTypes[btype]
-        if not btypename then return index, "Unrecognized bracket type." end
 
         -- Skip to the next closing bracket of the same type.
         j = index
         while byte(str, j) ~= 125 do
             trim_whitespace = false
             j = skipToCharWithEscapes(str, j, btypeCloser)
-            if j == 0 then return #str, "Unexpected end of template." end
+            if j == 0 then return nil, "Unexpected end of template." end
             j = j + 1
             if byte(str, j) == 45 then
                 j = j + 1
@@ -119,13 +130,14 @@ local function primaryEscape(str)
 
         index = j + 1
     end
+    return buffer
 end
 
 return function(body)
 
     local ast, err = primaryEscape(body)
     if err then
-        return nil, err, ast
+        return nil, err
     end
 
     local b = {"local __a__={}\nlocal context=...\nlocal _c=context\n"}
@@ -143,8 +155,8 @@ return function(body)
 
     b[#b + 1] = "return table.concat(__a__)"
     local code = table.concat(b)
-    local ret = loadstring(code)
-
-    return ret
+    local ret
+    ret, err = loadstring(code)
+    return ret, err
 
 end

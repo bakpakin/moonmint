@@ -46,6 +46,7 @@ function response:send(body)
     self.code = 200
     self.body = body or self.body or ""
     self.done = true
+    self.headers["Content-Type"] = self.mime or 'text/html'
     return (self.go or noop)()
 end
 
