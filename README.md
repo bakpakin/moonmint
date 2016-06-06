@@ -1,9 +1,27 @@
 # moonmint
 
+__moonmint__ is an express like web framework that runs on top of luvit and/or lit. 
+
 ## Contents
 
-## Description
-__moonmint__ is an express like web framework that runs on top of luvit and/or lit. 
+* [Example](#example)
+* [API](#api)
+  * [Fields](#fields)
+  * [Functions](#functions)
+  * [Types](#types)
+    * [Server](#server)
+      * [Methods](#methods)
+    * [Router](#router)
+      * [Fields](#fields-1)
+      * [Methods](#methods-1)
+    * [Request](#request)
+      * [Fields](#fields-2)
+      * [Methods](#methods-2)
+    * [Response](#response)
+      * [Fields](#fields-3)
+      * [Methods](#methods-3)
+  * [Templates](#templates)
+* [Install](#install)
 
 ## Example
 
@@ -53,7 +71,14 @@ app:start()
 
 The main moonmint object used construct a moonmint app. All Server methods return the server to allow for chaining.
 
-* `Server:bind([options])` - Creates a binding for the server. The `options` parameter should
+##### Methods
+
+* `Server:bind([options])` - Creates a binding for the server. Options:
+  * `host`: The host to bind to. Default is `0.0.0.0`.
+  * `port`: The port to bind to. If running as root, the default ports are 80 for HTTP and 443 for HTTPS. Otherwise,
+    the defaults are 8080 for HTTP and 8443 for HTTPS.
+  * `tls`: An optional table used to enable SSL. Should contain `key` and `cert`, the SSL credentials as strings.
+  * `onStart`: An optional callback that is called when the Server starts.
 * `Server:start()` - Starts the server on all bindings. Returns the Server.
 * `Server:static(realpath, urlpath)`
 
