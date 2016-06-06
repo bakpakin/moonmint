@@ -88,10 +88,12 @@ function Static:clearCache()
     self.cache = {}
 end
 
-return function(base, nocache)
+return function(options)
+    options = options or {}
+    local base = options.base or '.'
     return setmetatable({
         fs = hybridfs(base),
         cache = {},
-        nocache = nocache
+        nocache = options.nocache
     }, Static_mt)
 end

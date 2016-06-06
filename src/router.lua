@@ -41,8 +41,14 @@ local router_mt
 
 -- Calling router creates a new router
 local router = setmetatable({}, {
-    __call = function(self)
-        return setmetatable({}, router_mt)
+    __call = function(self, options)
+        options = options or {
+            mergeParams = true
+        }
+        return setmetatable({
+            mergeParams = not not options.mergeParams,
+            mergeName = options.mergeName
+        }, router_mt)
     end
 })
 
@@ -138,11 +144,19 @@ local function subroute(self, path, ...)
         local newPath = matches[#matches]
         if newPath == "" then newPath = "/" end
         req.path = newPath
-        req.params = req.params or {}
-        local reqp = req.params
-        for i = 1, #captures do
-            reqp[#reqp + 1] = matches[i]
-            reqp[captures[i]] = matches[i]
+        if self.mergeParams then
+            req.params = req.params or {}
+            local reqp
+            if self.mergeName then
+                reqp = req.params[self.mergeName] or {}
+                self.params[self.mergeName] = reqp
+            else
+                reqp = self.params
+            end
+            for i = 1, #captures do
+                reqp[#reqp + 1] = matches[i]
+                reqp[captures[i]] = matches[i]
+            end
         end
         local goCalled = false
         middleware(req, res, function()
@@ -172,23 +186,90 @@ function router:use(...)
     return self
 end
 
+-- If a middleware calls go multiple times, restart the chain at that point.
+local function chainHelper(middlewares, i, req, res, go)
+    local mw = middlewares[i]
+    if mw then
+        return mw(req, res, function()
+            return chainHelper(middlewares, i + 1, req, res, go)
+        end)
+    elseif go then
+        return go()
+    end
+end
+
+-- Run mws (middlewares) in series, and call go at the end. If a middleware
+-- does not call go, the chain stops.
+local function chain(mws, req, res, go)
+    return chainHelper(mws, 1, req, res, go)
+end
+
+-- Collapse multiple middlewares into one.
+local function makeChain(...)
+    if select('#', ...) < 2 then
+        return ...
+    else
+        local middlewares = {...}
+        return function(req, res, go)
+            return chain(middlewares, res, res, go)
+        end
+    end
+end
+
 --- Creates a new route for the router.
-function router:route(options, callback)
+function router:route(options, ...)
 
     -- Type checking
-    assert(callback, "Expected a callback function as the second argument.")
+    assert(..., "Expected a callback function as the second argument.")
     if type(options) == "string" then
         options = {path = options}
     end
     assert(type(options) == "table", "Expected the first argument options to be a table or string.")
 
-    local routeMethod = (options.method or "*"):upper()
-    local checkMethod = routeMethod ~= "*"
-    local routeF = options.path and compileRoute(options.path)
-    local hostF = options.host and compileHost(options.host)
+    local checkMethod = options.method and options.method  ~= "*"
+    local routeF = nil
+    local hostF = nil
+    local methodF = nil
+
+    if options.path then
+        if type(options.path) == 'function' then
+            routeF = options.path
+        else
+            local routeF = compileRoute(options.path)
+        end
+    end
+
+    if options.host then
+        if type(options.host) == 'function' then
+            hostF = options.host
+        else
+            hostF = compileHost(options.host)
+        end
+    end
+
+    if options.method then
+        if type(options.method) == 'function' then
+            methodF = options.method
+        elseif type(options.method) == 'table' then
+            local okMethods = {}
+            for _, m in ipairs(options.methods) do
+                okMethods[m:upper()] = true
+            end
+            function methodF(method)
+                return okMethods[method]
+            end
+        else
+            local m = options.method
+            function methodF(method)
+                return method == m
+            end
+        end
+    end
+
+    local callback = makeChain(...)
     return self:use(function(req, res, go)
         if checkMethod then
-            if req.method ~= routeMethod then return go() end
+            if not methodF(req.method) then return go() end
         end
         if hostF and not hostF(req.host) then return go() end
         local matches = routeF and routeF(req.path)
@@ -200,18 +281,7 @@ end
 
 --- Routes the request and response through the appropriate middlewares.
 function router:doRoute(req, res, go)
-    local i = 0
-    local function run()
-        i = i + 1
-        local mw = self[i]
-        if mw and not res.done then
-            res.go = run
-            return mw(req, res, run)
-        elseif go then
-            return go()
-        end
-    end
-    return run()
+    return chain(self, req, res, go)
 end
 
 -- Helper to make aliases for different common routes.
@@ -230,6 +300,8 @@ makeAlias("POST", "post")
 makeAlias("DELETE", "delete")
 makeAlias("HEAD", "head")
 makeAlias("OPTIONS", "options")
+makeAlias("TRACE", "trace")
+makeAlias("CONNECT", "connect")
 makeAlias("*", "all")
 
 router_mt = {

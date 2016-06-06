@@ -28,6 +28,20 @@ local concat = table.concat
 local tostring = tostring
 local tonumber = tonumber
 
+local function bodyParse(req, res, go)
+    local parts = {}
+    local read = req.read
+    for chunk in read do
+        if #chunk > 0 then
+            parts[#parts + 1] = chunk
+        else
+            break
+        end
+    end
+    req.body =  #parts > 0 and concat(parts) or nil
+    return go()
+end
+
 -- Matches characters that have special meanings or can't be printed in a url
 local urlSpecials = "[^%w%*%-%.%_]"
 
@@ -134,27 +148,31 @@ local function queryDecode(str)
     return ret
 end
 
--- Converts a Lua table to a valid cookie string.
-local function cookieEncode(object)
-
+local function htmlEscape(str)
+    return (gsub(str, "[}{\">/<'&]", {
+        ["&"] = "&amp;",
+        ["<"] = "&lt;",
+        [">"] = "&gt;",
+        ['"'] = "&quot;",
+        ["'"] = "&#39;",
+        ["/"] = "&#47;"
+    }))
 end
 
--- Converts
-local function cookieDecode(str)
+local entityMap  = {
+    ["lt"] = "<",
+    ["gt"] = ">",
+    ["amp"] = "&",
+    ["quot"] = '"',
+    ["apos"] = "'"
+}
 
+local function htmlUnescapeHelper(orig, n, s)
+      return entityMap[s] or n == "#" and char(s) or n == "#x" and char(tonumber(s,16)) or orig
 end
 
--- Symmetric encryption and decryption
-local function encrypt(str, secret)
-
-end
-
-local function decrypt(str, secret)
-
-end
-
-local function cryptrandom()
-
+local function htmlUnescape(str)
+    return gsub(str, '(&(#?#x)([%d%a]+);)', htmlUnescapeHelper)
 end
 
 local print = print
@@ -174,7 +192,8 @@ return {
     urlDecode = urlDecode,
     queryEncode = queryEncode,
     queryDecode = queryDecode,
-    cookieEncode = cookieEncode,
-    cookieDecode = cookieDecodel,
-    logger = logger
+    htmlEscape = htmlEscape,
+    htmlUnescape = htmlUnescape,
+    logger = logger,
+    bodyParse = bodyParse
 }

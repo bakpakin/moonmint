@@ -20,12 +20,13 @@ local moonmint_mt = {}
 local moonmint = setmetatable({}, moonmint_mt)
 
 moonmint.server = require "./src/server"
-moonmint.request = require "./src/request"
-moonmint.response = require "./src/response"
 moonmint.template = require "./src/template"
 moonmint.router = require "./src/router"
 moonmint.static = require "./src/static"
-moonmint.util = require "./src/util"
+local util = require "./src/util"
+for k, v in pairs(util) do
+    moonmint[k] = v
+end
 
 moonmint_mt.__call = function(self, ...)
     return moonmint.server(...)

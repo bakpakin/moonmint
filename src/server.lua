@@ -59,36 +59,28 @@ function Server:handleConnection(rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
     for head in read do
-        local parts = {}
-        for chunk in read do
-            if #chunk > 0 then
-                parts[#parts + 1] = chunk
-            else
-                break
-            end
-        end
-        local body = #parts > 0 and table.concat(parts) or nil
         local url = head.path or ""
-        local path, rawquery = match(url, "^([^%?]*)[%?]?(.*)$")
+        local path, rawQuery = match(url, "^([^%?]*)[%?]?(.*)$")
         local req = request {
             app = self,
             socket = socket,
             method = head.method,
             url = url,
             path = path,
-            rawquery = rawquery,
+            originalPath = path,
+            rawQuery = rawQuery,
+            read = read,
             headers = head,
             version = head.version,
-            keepAlive = head.keepAlive,
-            body = body
+            keepAlive = head.keepAlive
         }
         local res = response {
             app = self,
+            write = write,
             socket = socket,
             code = 404,
             headers = {},
             body = "404 Not Found.",
-            done = false
         }
 
         -- Use middleware
@@ -148,13 +140,17 @@ function Server:start()
             callback = function(...) return self:handleConnection(...) end
         end
         createServer(binding, callback)
-        print(("HTTP server listening at http%s://%s:%d..."):format(binding.tls and "s" or "", binding.host, binding.port))
+        if binding.onStart then
+            binding.onStart(self, binding)
+        end
     end
 end
 
 function Server:static(urlpath, realpath)
     realpath = realpath or urlpath
-    self:use(urlpath, static(realpath))
+    self:use(urlpath, static({
+        base = realpath
+    }))
     return self
 end
 
@@ -173,6 +169,8 @@ routerWrap("put")
 routerWrap("post")
 routerWrap("delete")
 routerWrap("options")
+routerWrap("trace")
+routerWrap("connect")
 routerWrap("all")
 routerWrap("head")
 

@@ -45,16 +45,29 @@ local noop = function() end
 function response:send(body)
     self.code = 200
     self.body = body or self.body or ""
-    self.done = true
     self.headers["Content-Type"] = self.mime or 'text/html'
-    return (self.go or noop)()
+    return self
+end
+
+function response:append(field, ...)
+    local value
+    if type(...) == 'table' then
+        value = table.concat(...)
+    else
+        value = table.concat({...})
+    end
+    local prev = self.headers[field]
+    if prev then
+        self.headers[field] = prev .. tostring(value)
+    else
+        self.headers[field] = tostring(value)
+    end
 end
 
 function response:redirect(location)
     self.code = 302
     self.headers["Location"] = location
-    self.done = true
-    return (self.go or noop)()
+    return self
 end
 
 return response

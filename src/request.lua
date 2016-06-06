@@ -66,11 +66,6 @@ request_mt = {
     end
 }
 
-function request:set(name, value)
-    self.headers[name] = value;
-    return self
-end
-
 function request:get(name)
     return self.headers[name]
 end
