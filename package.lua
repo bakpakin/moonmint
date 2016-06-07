@@ -1,6 +1,6 @@
 return {
     name = "bakpakin/moonmint",
-    version = "1.0.1-1",
+    version = "1.0.2-1",
     description = "Web Framework for lit.",
     tags = { "lua", "lit", "luvit", "moonmint", "router", "server", "framework"},
     license = "MIT",
