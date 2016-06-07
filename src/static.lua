@@ -25,9 +25,10 @@ local match = string.match
 local function makeCacheEntry(fs, path, stat)
     local body = fs.readFile(path)
     if not body then return nil end
+    local mime = mime(path)
     return {
         path = path,
-        mime = mime(path),
+        mime = mime,
         body = body,
         time = stat.mtime
     }
@@ -40,11 +41,8 @@ local Static_mt = {
 
 function Static:doRoute(req, res, go)
 
-    if req.method ~= "GET" then return end
-    local path = match(req.path, "/?([^%?%#]*)")
-    if not path or #path == 0 then
-        path = "./"
-    end
+    if req.method ~= "GET" then return go() end
+    local path = "." .. req.path
 
     local fs = self.fs
     local cache = self.cache

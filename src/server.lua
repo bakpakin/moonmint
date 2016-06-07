@@ -80,9 +80,7 @@ function Server:handleConnection(rawRead, rawWrite, socket)
             write = write,
             updateEncoder = updateEncoder,
             socket = socket,
-            code = 200,
             headers = {},
-            body = "",
             state = "pending"
         }
 

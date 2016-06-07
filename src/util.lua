@@ -180,16 +180,10 @@ local function htmlUnescape(str)
     return gsub(str, '(&(#?#x)([%d%a]+);)', htmlUnescapeHelper)
 end
 
-local print = print
 local function logger(req, res, go)
-    local useragent = req:get("user-agent")
-    if useragent then
-        local time = os.date()
-        go()
-        print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
-    else
-        return go()
-    end
+    local time = os.date()
+    go()
+    print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
 end
 
 return {
