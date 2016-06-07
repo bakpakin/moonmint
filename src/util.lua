@@ -28,7 +28,7 @@ local concat = table.concat
 local tostring = tostring
 local tonumber = tonumber
 
-local function bodyParse(req, res, go)
+local function bodyParser(req, res, go)
     local parts = {}
     local read = req.read
     for chunk in read do
@@ -38,7 +38,7 @@ local function bodyParse(req, res, go)
             break
         end
     end
-    req.body =  #parts > 0 and concat(parts) or nil
+    req.body = #parts > 0 and concat(parts) or nil
     return go()
 end
 
@@ -85,7 +85,7 @@ end
 -- the url. Maps 1 to 1 with util.urlEncode
 local function urlDecode(str)
     if not match(str, urlValidComponent) then
-        error("Invlaid URL Component.")
+        error("Invalid URL Component.")
     end
     local ret = gsub(str, "%+", " ")
     ret = gsub(ret, "%%[0-9a-fA-F][0-9a-fA-F]", urlDecodeFilter)
@@ -132,7 +132,7 @@ end
 -- Strings will be converted to numbers if possible.
 local function queryDecode(str)
     local ret = nil
-    for key, value in gmatch(str, "([^%&]*)=([^%&]*)") do
+    for key, value in gmatch(str, "([^%&%=]+)=([^%&%=]*)") do
         ret = ret or {}
         local keyDecoded = urlDecode(key)
         local valueDecoded = urlDecode(value)
@@ -146,6 +146,11 @@ local function queryDecode(str)
         ret[keyDecoded] = valueDecoded
     end
     return ret
+end
+
+local function queryParser(req, res, go)
+    req.query = queryDecode(req.rawQuery or "")
+    return go()
 end
 
 local function htmlEscape(str)
@@ -195,5 +200,6 @@ return {
     htmlEscape = htmlEscape,
     htmlUnescape = htmlUnescape,
     logger = logger,
-    bodyParse = bodyParse
+    bodyParser = bodyParser,
+    queryParser = queryParser
 }

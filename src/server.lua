@@ -70,6 +70,7 @@ function Server:handleConnection(rawRead, rawWrite, socket)
             originalPath = path,
             rawQuery = rawQuery,
             read = read,
+            updateDecoder = updateDecoder,
             headers = head,
             version = head.version,
             keepAlive = head.keepAlive
@@ -77,31 +78,26 @@ function Server:handleConnection(rawRead, rawWrite, socket)
         local res = response {
             app = self,
             write = write,
+            updateEncoder = updateEncoder,
             socket = socket,
-            code = 404,
+            code = 200,
             headers = {},
-            body = "404 Not Found.",
+            body = "",
+            state = "pending"
         }
 
         -- Use middleware
         self._router:doRoute(req, res)
 
-        -- Modify the res table in-place to conform to luvit http-codec
-        rawset(res.headers, "code", res.code)
-        write(res.headers)
-        rawset(res.headers, "code", nil)
-
         if res.upgrade then
             return res.upgrade(read, write, updateDecoder, updateEncoder, socket)
         end
 
-        write(res.body)
-
-        if not (res.keepAlive and head.keepAlive) then
+        -- Drop non-keepalive and unhandled requets
+        if res.state == "pending" or (not (res.keepAlive and head.keepAlive)) then
             break
         end
     end
-    write()
 end
 
 function Server:bind(options)

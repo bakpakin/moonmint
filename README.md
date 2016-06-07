@@ -1,6 +1,6 @@
 # moonmint
 
-__moonmint__ is an express like web framework that runs on top of luvit and/or lit. 
+__moonmint__ is an express like web framework that runs on top of luvit and/or lit.
 
 ## Contents
 
@@ -43,7 +43,8 @@ app:start()
 
 ### Fields
 
-* `moonmint.bodyParse` - Parses the body of incoming requests, and stores the resulting string in `Request.body`.
+* `moonmint.bodyParser` - Parses the body of incoming requests, and stores the resulting string in `Request.body`.
+* `moonmint.queryParser` - Parses the raw query string of incoming requests, and stores the resulting object in `Request.query`.
 * `moonmint.logger` - A useful default logging middleware.
 
 ### Functions
@@ -58,7 +59,7 @@ app:start()
   * `nocache` - A boolean that will disable caching if truthy.
 * `moonmint.template(source)` - Creates a new template function from a string. If the template source cannot be
   parsed, then returns nil and an error as the second parameter. See the Templates section for more info.
-* `moonmint.queryEncode(obj)` - Encodes a Lua object as a url query string. 
+* `moonmint.queryEncode(obj)` - Encodes a Lua object as a url query string.
 * `moonmint.queryDecode(str)` - Decodes a query string into a Lua table.
 * `moonmint.urlEncode(str)` - Encodes a Lua string into a url safe string.
 * `moonmint.urlDecode(str)` - Decodes a url string into a Lua string.
@@ -91,7 +92,7 @@ A special handler that routes requests. It is implemented as a middleware, so it
 the middleware function signature, `myRouter(req, res, go)`.
 
 Routes support express-like syntax. Use normal URL paths, or use captures to match many paths.
-To capture a path element, use the colon syntax '/path/:capturename/more'. The URL section that matched 
+To capture a path element, use the colon syntax '/path/:capturename/more'. The URL section that matched
 capturename will be available in `Request.params.capturename`. To match multiple sections of a URL, use
 double colon syntax - '/path/:capturemany:/more'.
 
@@ -142,7 +143,7 @@ Represents an HTTP request. Constructed for every connection by the Server.
 
 ##### Methods
 
-* `Request:get(header)` - Gets a header. 
+* `Request:get(header)` - Gets a header.
 
 #### Response
 
@@ -176,7 +177,7 @@ local str = template {
 }
 ```
 
-The first is basic text substitution with double 
+The first is basic text substitution with double
 brackets `{{ }}`.
 
 ```
@@ -191,7 +192,7 @@ brackets `{{ }}`.
 ```
 
 This does plain substitution into the HTML document. If rendering an HTML page with user input or other
-not HTML input, use `moonmint.htmlEscape(str)` on 
+not HTML input, use `moonmint.htmlEscape(str)` on
 the arguments to the template.
 
 One can also inject Lua into the template functions, which are compiled into Lua and loaded via `loadstring`.
