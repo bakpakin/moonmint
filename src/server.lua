@@ -158,8 +158,8 @@ function Server:start()
         -- Wrap callback with an error handler to catch server errors. If the error handler
         -- is expicitely false, don't use any error handler
         local wrappedCallback = callback
-        if options.globalErrorHandler ~= false then
-            local gErrorHandler = options.globalErrorHandler or defaultGlobalErrorHandler
+        if binding.globalErrorHandler ~= false then
+            local gErrorHandler = binding.globalErrorHandler or defaultGlobalErrorHandler
             wrappedCallback = function(...)
                 local status, a, b, c, d, e, f = pcall(callback, ...)
                 if not status then
@@ -170,8 +170,8 @@ function Server:start()
         end
 
         -- Set request error handler unless explicitely disabled
-        if options.errorHandler ~= false then
-            options.errorHandler = options.errorHandler or defaultErrorHandler
+        if binding.errorHandler ~= false then
+             binding.errorHandler = binding.errorHandler or defaultErrorHandler
         end
 
         -- Create server with coro-net
