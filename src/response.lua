@@ -67,6 +67,11 @@ function response:send(body)
     return self
 end
 
+function response:status(code)
+    self.code = code
+    return self
+end
+
 function response:append(field, ...)
     local value
     if type(...) == 'table' then
