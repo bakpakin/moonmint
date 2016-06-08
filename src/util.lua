@@ -153,33 +153,67 @@ local function queryParser(req, res, go)
     return go()
 end
 
-local function htmlEscape(str)
-    return (gsub(str, "[}{\">/<'&]", {
-        ["&"] = "&amp;",
-        ["<"] = "&lt;",
-        [">"] = "&gt;",
-        ['"'] = "&quot;",
-        ["'"] = "&#39;",
-        ["/"] = "&#47;"
-    }))
-end
-
-local entityMap  = {
-    ["lt"] = "<",
-    ["gt"] = ">",
-    ["amp"] = "&",
-    ["quot"] = '"',
-    ["apos"] = "'"
+local entityToRaw = {
+    lt = '<',
+    gt = '>',
+    amp = '&',
+    quot = '"',
+    apos = "'",
 }
 
-local function htmlUnescapeHelper(orig, n, s)
-      return entityMap[s] or n == "#" and char(s) or n == "#x" and char(tonumber(s,16)) or orig
+local rawToEntity = {}
+for k, v in pairs(entityToRaw) do
+    rawToEntity[v] = '&' .. k .. ';'
+end
+
+rawToEntity["'"] = "&#39;"
+rawToEntity["/"] = "&#47;"
+
+local function htmlEscape(str)
+    return (gsub(str, "[}{\">/<'&]", rawToEntity))
+end
+
+-- Convert codepoint to string
+-- http://stackoverflow.com/questions/26071104/more-elegant-simpler-way-to-convert-code-point-to-utf-8
+local function utf8_char(cp)
+    if cp < 128 then
+        return char(cp)
+    end
+    local suffix = cp % 64
+    local c4 = 128 + suffix
+    cp = (cp - suffix) / 64
+    if cp < 32 then
+      return char(192 + cp, c4)
+    end
+    suffix = cp % 64
+    local c3 = 128 + suffix
+    cp = (cp - suffix) / 64
+    if cp < 16 then
+      return char(224 + cp, c3, c4)
+    end
+    suffix = cp % 64
+    cp = (cp - suffix) / 64
+    return char(240 + cp, 128 + suffix, c3, c4)
+end
+
+local function htmlUnescapeHelper(n, s)
+    if n == '#' then
+        return utf8_char(tonumber(s, 10)) -- Decimal
+    elseif n == '#x' then
+        return utf8_char(tonumber(s, 16)) -- Hex
+    elseif entityToRaw[s] then
+        return entityToRaw[s]
+    else
+        -- Default to returning the potential entity as is.
+        return ('&%s%s;'):format(n, s)
+    end
 end
 
 local function htmlUnescape(str)
-    return gsub(str, '(&(#?#x)([%d%a]+);)', htmlUnescapeHelper)
+    return gsub(str, '&(#?x?)(%w+);', htmlUnescapeHelper)
 end
 
+-- Simple logger
 local function logger(req, res, go)
     local time = os.date()
     go()
