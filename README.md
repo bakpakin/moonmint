@@ -159,10 +159,14 @@ Represents an HTTP response. Constructed for every connection by the Server.
 
 ##### Methods
 
+All Reponse methods return the Response object, so the methods can be chained.
+
 * `Response:set(header, value)` - Set a header.
 * `Response:append(header, ...)` - Append to a header, creating it if it doesn't yet exist.
 * `Response:get(header)` - Get a header value.
-* `Response:send([body])` - Set the body of the Response.
+* `Response:send([body])` - Send the Response. Sets the body of the response optionally, and
+  will use a status code of 200 if not otherwise specified.
+* `Response:status(code)` - Set the status code of the Response.
 * `Response:redirect(location)` - Sets the Response to an HTTP redirect response.
 
 ### Templates
