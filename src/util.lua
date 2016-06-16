@@ -28,7 +28,7 @@ local concat = table.concat
 local tostring = tostring
 local tonumber = tonumber
 
-local function bodyParse(req, res, go)
+local function bodyParser(req, res, go)
     local parts = {}
     local read = req.read
     for chunk in read do
@@ -38,7 +38,7 @@ local function bodyParse(req, res, go)
             break
         end
     end
-    req.body =  #parts > 0 and concat(parts) or nil
+    req.body = #parts > 0 and concat(parts) or nil
     return go()
 end
 
@@ -85,7 +85,7 @@ end
 -- the url. Maps 1 to 1 with util.urlEncode
 local function urlDecode(str)
     if not match(str, urlValidComponent) then
-        error("Invlaid URL Component.")
+        error("Invalid URL Component.")
     end
     local ret = gsub(str, "%+", " ")
     ret = gsub(ret, "%%[0-9a-fA-F][0-9a-fA-F]", urlDecodeFilter)
@@ -132,7 +132,7 @@ end
 -- Strings will be converted to numbers if possible.
 local function queryDecode(str)
     local ret = nil
-    for key, value in gmatch(str, "([^%&]*)=([^%&]*)") do
+    for key, value in gmatch(str, "([^%&%=]+)=([^%&%=]*)") do
         ret = ret or {}
         local keyDecoded = urlDecode(key)
         local valueDecoded = urlDecode(value)
@@ -148,43 +148,76 @@ local function queryDecode(str)
     return ret
 end
 
-local function htmlEscape(str)
-    return (gsub(str, "[}{\">/<'&]", {
-        ["&"] = "&amp;",
-        ["<"] = "&lt;",
-        [">"] = "&gt;",
-        ['"'] = "&quot;",
-        ["'"] = "&#39;",
-        ["/"] = "&#47;"
-    }))
+local function queryParser(req, res, go)
+    req.query = queryDecode(req.rawQuery or "")
+    return go()
 end
 
-local entityMap  = {
-    ["lt"] = "<",
-    ["gt"] = ">",
-    ["amp"] = "&",
-    ["quot"] = '"',
-    ["apos"] = "'"
+local entityToRaw = {
+    lt = '<',
+    gt = '>',
+    amp = '&',
+    quot = '"',
+    apos = "'",
 }
 
-local function htmlUnescapeHelper(orig, n, s)
-      return entityMap[s] or n == "#" and char(s) or n == "#x" and char(tonumber(s,16)) or orig
+local rawToEntity = {}
+for k, v in pairs(entityToRaw) do
+    rawToEntity[v] = '&' .. k .. ';'
+end
+
+rawToEntity["'"] = "&#39;"
+rawToEntity["/"] = "&#47;"
+
+local function htmlEscape(str)
+    return (gsub(str, "[}{\">/<'&]", rawToEntity))
+end
+
+-- Convert codepoint to string
+-- http://stackoverflow.com/questions/26071104/more-elegant-simpler-way-to-convert-code-point-to-utf-8
+local function utf8_char(cp)
+    if cp < 128 then
+        return char(cp)
+    end
+    local suffix = cp % 64
+    local c4 = 128 + suffix
+    cp = (cp - suffix) / 64
+    if cp < 32 then
+      return char(192 + cp, c4)
+    end
+    suffix = cp % 64
+    local c3 = 128 + suffix
+    cp = (cp - suffix) / 64
+    if cp < 16 then
+      return char(224 + cp, c3, c4)
+    end
+    suffix = cp % 64
+    cp = (cp - suffix) / 64
+    return char(240 + cp, 128 + suffix, c3, c4)
+end
+
+local function htmlUnescapeHelper(n, s)
+    if n == '#' then
+        return utf8_char(tonumber(s, 10)) -- Decimal
+    elseif n == '#x' then
+        return utf8_char(tonumber(s, 16)) -- Hex
+    elseif entityToRaw[s] then
+        return entityToRaw[s]
+    else
+        -- Default to returning the potential entity as is.
+        return ('&%s%s;'):format(n, s)
+    end
 end
 
 local function htmlUnescape(str)
-    return gsub(str, '(&(#?#x)([%d%a]+);)', htmlUnescapeHelper)
+    return gsub(str, '&(#?x?)(%w+);', htmlUnescapeHelper)
 end
 
-local print = print
+-- Simple logger
 local function logger(req, res, go)
-    local useragent = req:get("user-agent")
-    if useragent then
-        local time = os.date()
-        go()
-        print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
-    else
-        return go()
-    end
+    local time = os.date()
+    go()
+    print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
 end
 
 return {
@@ -195,5 +228,6 @@ return {
     htmlEscape = htmlEscape,
     htmlUnescape = htmlUnescape,
     logger = logger,
-    bodyParse = bodyParse
+    bodyParser = bodyParser,
+    queryParser = queryParser
 }

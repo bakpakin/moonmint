@@ -12,8 +12,7 @@ end
 
 local testQuery = testEncodeGen("Test Query", util.queryEncode, util.queryDecode)
 local testURL = testEncodeGen("Test URL", util.urlEncode, util.urlDecode)
-local testJSON = testEncodeGen("Test JSON", util.jsonEncode, util.jsonDecode)
-local testCookie = testEncodeGen("Test Cookie", util.cookieEncode, util.cookieDecode)
+local testHtml = testEncodeGen("Test HTML", util.htmlEscape, util.htmlUnescape)
 
 describe("util", function()
 
@@ -46,13 +45,27 @@ describe("util", function()
 
     end)
 
+    describe("HTML encoding/decoding", function()
+
+        it("Encodes/decodes simple html strings.", function()
+            testHtml("zyxwvut")
+            testHtml("1233456")
+        end)
+
+        it("Encodes/decodes strings with tags.", function()
+            testHtml("zyxwvut<hi>akjsk</hi>")
+            testHtml("1233456</div><div class=\"giggles\">")
+        end)
+
+    end)
+
     describe("Query encoding/decoding", function()
 
         it("Encodes and decodes strings", function()
             testQuery({
                 hello = "kitty",
                 cat = "yum"
-            }, "hello=kitty&cat=yum")
+            })
         end)
 
         it("Encodes and decodes numbers and strings", function()

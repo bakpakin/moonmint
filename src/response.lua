@@ -17,6 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local setmetatable = setmetatable
+local rawset = rawset
 local headers_mt = require './httpheader'
 
 local response_mt
@@ -43,9 +44,31 @@ end
 local noop = function() end
 
 function response:send(body)
-    self.code = 200
-    self.body = body or self.body or ""
+
+    if self.state ~= "pending" then
+        error(string.format("Response state is \"%s\", expected \"pending\".",  self.state))
+    end
+
+    local write = self.write
+    body = body or self.body or ""
     self.headers["Content-Type"] = self.mime or 'text/html'
+
+    -- Modify the res table in-place to conform to luvit http-codec
+    self.code = self.code or 200
+    rawset(self.headers, "code", self.code)
+    write(self.headers);
+    rawset(self.headers, "code", nil)
+
+    -- Write the body.
+    write(body)
+    write()
+    self.state = "done"
+
+    return self
+end
+
+function response:status(code)
+    self.code = code
     return self
 end
 
@@ -67,7 +90,7 @@ end
 function response:redirect(location)
     self.code = 302
     self.headers["Location"] = location
-    return self
+    return self:send()
 end
 
 return response

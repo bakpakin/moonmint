@@ -55,12 +55,14 @@ local function makeServer()
 end
 
 -- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
-function Server:handleConnection(rawRead, rawWrite, socket)
+function Server:handleConnection(binding, rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
     for head in read do
+
         local url = head.path or ""
         local path, rawQuery = match(url, "^([^%?]*)[%?]?(.*)$")
+
         local req = request {
             app = self,
             socket = socket,
@@ -70,38 +72,42 @@ function Server:handleConnection(rawRead, rawWrite, socket)
             originalPath = path,
             rawQuery = rawQuery,
             read = read,
+            updateDecoder = updateDecoder,
             headers = head,
             version = head.version,
             keepAlive = head.keepAlive
         }
+
         local res = response {
             app = self,
             write = write,
+            updateEncoder = updateEncoder,
             socket = socket,
-            code = 404,
             headers = {},
-            body = "404 Not Found.",
+            state = "pending"
         }
 
-        -- Use middleware
-        self._router:doRoute(req, res)
+        -- Use middleware and catch errors.
+        local status = pcall(self._router.doRoute, self._router, req, res)
+        if not status then
+            res.state = "error"
+            binding.errorHandler(err, req, res, self, binding)
+            return
+        end
 
-        -- Modify the res table in-place to conform to luvit http-codec
-        rawset(res.headers, "code", res.code)
-        write(res.headers)
-        rawset(res.headers, "code", nil)
+        -- Drop non-keepalive and unhandled requets
+        if res.state == "pending" or 
+            res.state == "error" or
+            (not (res.keepAlive and head.keepAlive)) then
+            break
+        end
 
+        -- Handle upgrade requests
         if res.upgrade then
             return res.upgrade(read, write, updateDecoder, updateEncoder, socket)
         end
 
-        write(res.body)
-
-        if not (res.keepAlive and head.keepAlive) then
-            break
-        end
     end
-    write()
 end
 
 function Server:bind(options)
@@ -116,6 +122,15 @@ function Server:bind(options)
     end
     self.bindings[#self.bindings + 1] = options
     return self
+end
+
+local function defaultErrorHandler(err, req, res, server, binding)
+    print('Internal Server Error:', err)
+    res:status(500):send('Internal Server Error')
+end
+
+local function defaultGlobalErrorHandler(err, server, binding)
+    print('Uncaught Internal Server Error:', err)
 end
 
 function Server:start()
@@ -134,12 +149,33 @@ function Server:start()
                     key = assert(tls.key, "tls key required"),
                     cert = assert(tls.cert, "tls cert required")
                 })
-                return self:handleConnection(newRead, newWrite, socket)
+                return self:handleConnection(binding, newRead, newWrite, socket)
             end
         else
-            callback = function(...) return self:handleConnection(...) end
+            callback = function(...) return self:handleConnection(binding, ...) end
         end
-        createServer(binding, callback)
+
+        -- Wrap callback with an error handler to catch server errors. If the error handler
+        -- is expicitely false, don't use any error handler
+        local wrappedCallback = callback
+        if binding.globalErrorHandler ~= false then
+            local gErrorHandler = binding.globalErrorHandler or defaultGlobalErrorHandler
+            wrappedCallback = function(...)
+                local status, a, b, c, d, e, f = pcall(callback, ...)
+                if not status then
+                    return gErrorHandler(a, self, binding)
+                end
+                return a, b, c, d, e, f
+            end
+        end
+
+        -- Set request error handler unless explicitely disabled
+        if binding.errorHandler ~= false then
+             binding.errorHandler = binding.errorHandler or defaultErrorHandler
+        end
+
+        -- Create server with coro-net
+        createServer(binding, wrappedCallback)
         if binding.onStart then
             binding.onStart(self, binding)
         end
@@ -154,6 +190,8 @@ function Server:static(urlpath, realpath)
     return self
 end
 
+-- Duplicate router functions for the server, so routes and middleware can be placed
+-- directly on the server.
 local function routerWrap(fname)
     Server[fname] = function(self, ...)
         local r = self._router
