@@ -27,12 +27,17 @@ author = { name = "Calvin Rose" }
 homepage = "https://github.com/bakpakin/moonmint"
 ]]
 
+local setmetatable = setmetatable
+local rawget = rawget
 local byte = string.byte
 
 local bracketTypes = {
     [byte("{")] = "variables",
     [byte("%")] = "lua",
-    [byte("#")] = "comment"
+    [byte("$")] = "luaexpr",
+    [byte("#")] = "comment",
+    [byte('"')] = "literal",
+    [byte("'")] = "literal",
 }
 
 local btypeClosers = {
@@ -49,6 +54,34 @@ local function skipToCharWithEscapes(str, i, ch, escape)
         end
     end
     return i
+end
+
+local htmlEscapeMap = {
+    ['>'] = '&gt;',
+    ['<'] = '&lt;',
+    ['"'] = '&quot;',
+    ["'"] = '&#39;',
+    ['/'] = '&#47;',
+    ['&'] = '&amp;',
+}
+
+local function htmlEscape(str)
+    return str:gsub("[\">/<'&]", htmlEscapeMap)
+end
+
+local backslashEscapeMap = {
+    n = '\n',
+    t = '\t',
+    r = '\r'
+}
+
+local function backslashSub(c)
+    local letter = c:byte(2)
+    return backslashEscapeMap[letter] or letter
+end
+
+local function backslashEscape(str)
+    return str:gsub('%\\.', backslashSub)
 end
 
 local function skipToBracket(str, i)
@@ -88,6 +121,7 @@ local function primaryEscape(str)
     local index = 1
     local trim_whitespace = false
     while true do
+        ::looptop::
 
         -- Skip to an open bracket
         local j = skipToBracket(str, index)
@@ -100,14 +134,22 @@ local function primaryEscape(str)
 
         -- Get the bracket type
         index = j + 1
+        local nextindex = index
         local btype = byte(str, index)
         if btype == 45 then
-            index = index + 1
+            nextindex = nextindex + 1
             buffer[#buffer] = trim_end(buffer[#buffer])
-            btype = byte(str, index)
+            btype = byte(str, nextindex)
         end
         local btypeCloser = btypeClosers[btype] or btype
         local btypename = bracketTypes[btype]
+
+        -- Check for non escape
+        if not btypename then
+            trim_whitespace = false
+            goto looptop
+        end
+        index = nextindex
 
         -- Skip to the next closing bracket of the same type.
         j = index
@@ -123,9 +165,19 @@ local function primaryEscape(str)
         end
 
         -- Append the body of the brackets
+        local htmlEscape = true
+        local body = str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0))
+        if btynemame ~= 'literal' then
+            body = trim(body)
+            if body:byte() == 38 then
+                htmlEscape = false
+                body = body:sub(2, -1)
+            end
+        end
         buffer[#buffer + 1] = {
             type = btypename,
-            body = trim(str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0)))
+            htmlEscape = htmlEscape,
+            body = body
         }
 
         index = j + 1
@@ -133,30 +185,59 @@ local function primaryEscape(str)
     return buffer
 end
 
+local function wrapOptions(options)
+    return setmetatable({}, {
+        __index = function(self, key)
+            local raw = rawget(self, key)
+            if raw ~= nil then
+                return raw
+            end
+            raw = htmlEscape(options[key])
+            self[key] = raw
+            return raw
+        end
+    })
+end
+
 return function(body)
 
     local ast, err = primaryEscape(body)
     if err then
-        return nil, err
+        return error(err)
     end
 
-    local b = {"local __a__={}\nlocal context=...\nlocal _c=context\n"}
+    local b = {"local a={}\nlocal context, e=...\nlocal c=context\n"}
 
     for i = 1, #ast do
         local part = ast[i]
         if type(part) == "string" then
-            b[#b + 1] = ("__a__[#__a__+1]=%s\n"):format(make_safe(part))
+            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(part))
         elseif part.type == "variables" then
-            b[#b + 1] = ("__a__[#__a__+1]=%s or _c.%s\n"):format(part.body, part.body)
+            b[#b + 1] = ("a[#a+1]=%s[%s]\n")
+                :format(part.htmlEscape and 'e' or 'c', make_safe(part.body))
         elseif part.type == "lua" then
             b[#b + 1] = ("\n%s\n"):format(part.body)
+        elseif part.type == "luaexpr" then
+            b[#b + 1] = ("a[#a+1]=%s\n"):format(part.body)
+        elseif part.type == "literal" then
+            local body = part.body
+            if part.htmlEscape then
+                body = htmlEscape(body)
+            end
+            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(body))
         end
     end
 
-    b[#b + 1] = "return table.concat(__a__)"
+    b[#b + 1] = "return table.concat(a)"
     local code = table.concat(b)
     local ret
-    ret, err = loadstring(code)
-    return ret, err
+    ret, err = (loadstring or load)(code)
+    if ret then
+        return function(options)
+            return ret(options, wrapOptions(options))
+        end
+    else
+        error(err)
+    end
 
 end
