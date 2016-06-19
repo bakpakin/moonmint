@@ -1,6 +1,9 @@
 # moonmint
 
-__moonmint__ is an express like web framework that runs on top of luvit and/or lit.
+__moonmint__ is an express like web framework that runs on top of luvi.
+Use complex routing, static file serving, and templating with an extremely
+minimal code base. Does not depend of luvit - full servers can be built with
+lit, the package manager for the luvit platform.
 
 ## Contents
 
@@ -171,7 +174,9 @@ All Reponse methods return the Response object, so the methods can be chained.
 
 ### Templates
 
-Templates are pretty simple - They are fancy string constructors.
+Templates are pretty simple - They are fancy string constructors that
+work well with html (HTML escaped). You can insert variable text into
+the templates via inserts.
 
 ```lua
 local template = moonmint.template('Hello, {{currentUser}}!')
@@ -184,10 +189,10 @@ local str = template {
 The first is basic text substitution with double
 brackets `{{ }}`.
 
-```
+```html
 <html>
 <body>
-    {{content}}
+    {{&innerStuff}}
     <div class="myfooter">
         {{footer}}
     </div>
@@ -195,20 +200,19 @@ brackets `{{ }}`.
 </html>
 ```
 
-This does plain substitution into the HTML document. If rendering an HTML page with user input or other
-not HTML input, use `moonmint.htmlEscape(str)` on
-the arguments to the template.
+This does plain text substitution into the HTML document. It also escapes the HTML for safe insertion. To not
+escape the HTML, prefix with the '&' symbol. In the above example, `innerStuff` is not HTML escaped.
 
 One can also inject Lua into the template functions, which are compiled into Lua and loaded via `loadstring`.
 Lua is inject inside percent brackets `{% %}`. To access the argumnnet passed to the template, reference the
 `content` variable.
 
-```
+```html
 <html>
 <body>
 
-    {% if content.user ~= 'Joe' %}
-    {{content}}
+    {% if content.user ~= 'Joe' then %}
+        {{inner}}
     {% end %}
 
     <div class="myfooter">
@@ -218,19 +222,21 @@ Lua is inject inside percent brackets `{% %}`. To access the argumnnet passed to
 </html>
 ```
 
-In the above example, the `{{content}}` arguments is not the same as `content` in the Lua part of the template.
-
 Lastly, one can inject comments into the template via hash brackets `{# #}`. Everything inside the brackets and the brackets
 themselves is ignored.
 
-```
+Whitespace trimming is also available. To trim whitespace from before a template insert, add a ''-' symbol
+at the beginning of the insert. To trim from the end, add a '-' symbol to the end of the insert.
+
+```html
 <html>
 <body>
 
     {# This is a comment #}
 
-    {% if content.user ~= 'Joe' %}
-    {{content}}
+    {% if content.user ~= 'Joe' then %}
+        {# Whitespace is trimmed form both before and after 'inner' #}
+        {{inner}}
     {% end %}
 
     <div class="myfooter">
@@ -245,3 +251,6 @@ Download and install __lit__, and the install moonmint in your project directory
 ```
 lit install bakpakin/moonmint
 ```
+## License
+
+MIT

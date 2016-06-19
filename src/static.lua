@@ -17,7 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local mime = require('mime').getType
-local hybridfs = require 'hybrid-fs'
+local hybridfs = require 'coro-fs'
 local byte = string.byte
 local setmetatable = setmetatable
 local match = string.match

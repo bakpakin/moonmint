@@ -72,7 +72,6 @@ function Server:handleConnection(binding, rawRead, rawWrite, socket)
             originalPath = path,
             rawQuery = rawQuery,
             read = read,
-            updateDecoder = updateDecoder,
             headers = head,
             version = head.version,
             keepAlive = head.keepAlive
@@ -81,6 +80,7 @@ function Server:handleConnection(binding, rawRead, rawWrite, socket)
         local res = response {
             app = self,
             write = write,
+            updateDecoder = updateDecoder,
             updateEncoder = updateEncoder,
             socket = socket,
             headers = {},

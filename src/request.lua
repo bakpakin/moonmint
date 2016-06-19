@@ -22,52 +22,16 @@ local rawset = rawset
 local match = string.match
 
 local headers_mt = require './httpheader'
-local util = require './util'
-local JSON = require 'json'
-local queryDecode = util.queryDecode
 
-local request_mt
-
-local request = setmetatable({}, {
-    __call = function(self, t)
-        t = t or { headers = {} }
-        setmetatable(t.headers, headers_mt)
-        return setmetatable(t, request_mt)
-    end
-})
-
-local lazy_loaders = {
-    query = function(self)
-        if self.rawquery then
-            rawset(self, "query", queryDecode(self.rawquery))
-        end
-    end,
-    json = function(self)
-        if self.body then
-            rawset(self, "json", json.decode(self.body))
-        end
-    end
-}
-
-request_mt = {
-    __index = function(self, key)
-        local value = rawget(self, key)
-        if value == nil then
-            value = request[key]
-            if value == nil then
-                local loader = lazy_loaders[key]
-                if loader then
-                    loader(self)
-                    value = rawget(self, key)
-                end
-            end
-        end
-        return value
-    end
-}
+local request = {}
+local request_mt = {__index = request}
 
 function request:get(name)
     return self.headers[name]
 end
 
-return request
+return function(t)
+    t = t or { headers = {} }
+    setmetatable(t.headers, headers_mt)
+    return setmetatable(t, request_mt)
+end
