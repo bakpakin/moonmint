@@ -19,13 +19,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local moonmint_mt = {}
 local moonmint = setmetatable({}, moonmint_mt)
 
+local server = require "moonmint.server"
 local util = require "moonmint.util"
 for k, v in pairs(util) do
     moonmint[k] = v
 end
 
 moonmint_mt.__call = function(self, ...)
-    return moonmint.server(...)
+    return server(...)
 end
 
 return moonmint

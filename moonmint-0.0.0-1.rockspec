@@ -12,9 +12,11 @@ description = {
 dependencies = {
     "lua >= 5.1",
     "luv ~> 1.9",
+    "luv-coro-channel >= 1.8",
+    "luv-coro-net >= 1.8",
+    "luv-coro-fs >= 1.8",
     "mimetypes >= 1.0",
-    "lua-path >= 2.0",
-    "openssl"
+    "lua-path"
 }
 build = {
     type = "builtin",

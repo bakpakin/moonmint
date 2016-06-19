@@ -1,4 +1,4 @@
-local moonmint = require(".")
+local moonmint = require("moonmint")
 local app = moonmint()
 
 app:use(moonmint.logger, moonmint.static("."))
