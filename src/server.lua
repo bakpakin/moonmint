@@ -267,7 +267,7 @@ function Server:bind(options)
         options.host = "0.0.0.0"
     end
     if not options.port then
-        options.port = require('uv').getuid() == 0 and
+        options.port = uv.getuid() == 0 and
         (options.tls and 443 or 80) or
         (options.tls and 8443 or 8080)
     end
@@ -284,7 +284,14 @@ local function defaultGlobalErrorHandler(err, server, binding)
     print('Uncaught Internal Server Error:', err)
 end
 
-function Server:start()
+function Server:start(options)
+    if not options then
+        options = {}
+    end
+    -- Add bindings in options
+    for i, binding in ipairs(options) do
+        self.bind(binding)
+    end
     local bindings = self.bindings
     if #bindings < 1 then
         self:bind()
@@ -331,6 +338,9 @@ function Server:start()
         if binding.onStart then
             binding.onStart(self, binding)
         end
+    end
+    if not options.noUVRun then
+        uv.run()
     end
 end
 

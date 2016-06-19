@@ -9,3 +9,5 @@ app:get("/", function(req, res)
 end)
 
 app:start()
+
+require('luv').run()

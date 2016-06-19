@@ -90,7 +90,7 @@ return function(options)
     options = options or {}
     local base = options.base or '.'
     return setmetatable({
-        fs = corofs(base),
+        fs = corofs.chroot(base),
         cache = {},
         nocache = options.nocache
     }, Static_mt)
