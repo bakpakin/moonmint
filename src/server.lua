@@ -18,7 +18,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local createServer = require('luv-coro-net').createServer
 local httpCodec = require 'moonmint.codec.http'
-local tlsWrap = require 'moonmint.codec.tls'
+-- local tlsWrap = require 'moonmint.codec.tls'
+local tlsWrap = function(a, b, c) return a, b, c end
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 
