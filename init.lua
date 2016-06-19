@@ -20,6 +20,10 @@ local moonmint_mt = {}
 local moonmint = setmetatable({}, moonmint_mt)
 
 local server = require "moonmint.server"
+moonmint.server = server
+moonmint.static = require "moonmint.static"
+moonmint.template = require "moonmint.template"
+moonmint.router = require "moonmint.router"
 local util = require "moonmint.util"
 for k, v in pairs(util) do
     moonmint[k] = v
