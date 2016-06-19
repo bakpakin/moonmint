@@ -18,9 +18,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local currentPath = (...):match("(.-)[^%.]+$")
 local createServer = require('luv-coro-net').createServer
-local httpCodec = require(currentPath .. 'http')
-local tlsWrap = require(currentPath .. 'tls')
-
+local httpCodec = require 'moonmint.codec.http'
+local tlsWrap = require 'moonmint.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 
@@ -33,6 +32,7 @@ local tremove = table.remove
 local lower = string.lower
 local pcall = pcall
 local match = string.match
+
 
 -- Pull readWrap and writeWrap from coro-wrapper
 local function readWrap(read, decode)
@@ -267,8 +267,8 @@ function Server:bind(options)
     end
     if not options.port then
         options.port = require('uv').getuid() == 0 and
-            (options.tls and 443 or 80) or
-            (options.tls and 8443 or 8080)
+        (options.tls and 443 or 80) or
+        (options.tls and 8443 or 8080)
     end
     self.bindings[#self.bindings + 1] = options
     return self
@@ -322,7 +322,7 @@ function Server:start()
 
         -- Set request error handler unless explicitely disabled
         if binding.errorHandler ~= false then
-             binding.errorHandler = binding.errorHandler or defaultErrorHandler
+            binding.errorHandler = binding.errorHandler or defaultErrorHandler
         end
 
         -- Create server with coro-net
