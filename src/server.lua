@@ -16,7 +16,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local currentPath = (...):match("(.-)[^%.]+$")
 local createServer = require('luv-coro-net').createServer
 local httpCodec = require 'moonmint.codec.http'
 local tlsWrap = require 'moonmint.codec.tls'

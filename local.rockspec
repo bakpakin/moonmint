@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "0.0.0-1"
+version = "local"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
     tag = version
@@ -22,8 +22,8 @@ build = {
     type = "builtin",
     modules = {
         ["moonmint"] = "init.lua",
-        ["moonmint.codec.http"] = "src/http.lua",
-        ["moonmint.codec.tls"] = "src/tls.lua",
+        ["moonmint.codec.http"] = "src/codec/http.lua",
+        ["moonmint.codec.tls"] = "src/codec/tls.lua",
         ["moonmint.server"] = "src/server.lua",
         ["moonmint.static"] = "src/static.lua",
         ["moonmint.util"] = "src/util.lua",
