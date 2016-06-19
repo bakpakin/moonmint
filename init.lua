@@ -1,5 +1,5 @@
 --[[
-Copyright (c) 2015 Calvin Rose
+Copyright (c) 2016 Calvin Rose
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
@@ -19,11 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local moonmint_mt = {}
 local moonmint = setmetatable({}, moonmint_mt)
 
-moonmint.server = require "./src/server"
-moonmint.template = require "./src/template"
-moonmint.router = require "./src/router"
-moonmint.static = require "./src/static"
-local util = require "./src/util"
+local util = require "moonmint.util"
 for k, v in pairs(util) do
     moonmint[k] = v
 end

@@ -1,5 +1,5 @@
 --[[
-Copyright (c) 2015 Calvin Rose
+Copyright (c) 2016 Calvin Rose
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
@@ -16,16 +16,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local createServer = require('coro-net').createServer
-local wrapper = require('coro-wrapper')
-local readWrap, writeWrap = wrapper.reader, wrapper.writer
-local httpCodec = require('http-codec')
-local tlsWrap = require('coro-tls').wrap
+local currentPath = (...):match("(.-)[^%.]+$")
+local createServer = require('luv-coro-net').createServer
+local httpCodec = require(currentPath .. 'http')
+local tlsWrap = require(currentPath .. 'tls')
 
-local router = require './router'
-local static = require './static'
-local request = require './request'
-local response = require './response'
+local router = require 'moonmint.router'
+local static = require 'moonmint.static'
 
 local setmetatable = setmetatable
 local rawget = rawget
@@ -37,6 +34,160 @@ local lower = string.lower
 local pcall = pcall
 local match = string.match
 
+-- Pull readWrap and writeWrap from coro-wrapper
+local function readWrap(read, decode)
+    local buffer = ""
+    return function ()
+        while true do
+            local item, extra = decode(buffer)
+            if item then
+                buffer = extra
+                return item
+            end
+            local chunk = read()
+            if not chunk then return end
+            buffer = buffer .. chunk
+        end
+    end,
+    function (newDecode)
+        decode = newDecode
+    end
+end
+
+local function writeWrap(write, encode)
+    return function (item)
+        if not item then
+            return write()
+        end
+        return write(encode(item))
+    end,
+    function (newEncode)
+        encode = newEncode
+    end
+end
+
+-- HTTP headers meta table
+local headers_mt = {
+    __index = function(self, key)
+        if type(key) ~= "string" then
+            return rawget(self, key)
+        end
+        key = lower(key)
+        for i = 1, #self do
+            local val = rawget(self, i)
+            if lower(val[1]) == key then
+                return val[2]
+            end
+        end
+    end,
+    __newindex = function(self, key, value)
+        if type(key) ~= "string" then
+            return rawset(self, key, value)
+        end
+        local wasset = false
+        key = lower(key)
+        for i = #self, 1, -1 do
+            local val = rawget(self, i)
+            if lower(val[1]) == key then
+                if wasset then
+                    local len = #self
+                    rawset(self, i, rawget(self, len))
+                    rawset(self, len, nil)
+                else
+                    wasset = true
+                    val[2] = value
+                end
+            end
+        end
+        if not wasset then
+            return rawset(self, #self + 1, {key, value})
+        end
+    end
+}
+
+-- Request meta table
+local request_index = {}
+local request_mt = {__index = request_index}
+
+function request_index:get(name)
+    return self.headers[name]
+end
+
+local function request(t)
+    t = t or { headers = {} }
+    setmetatable(t.headers, headers_mt)
+    return setmetatable(t, request_mt)
+end
+
+-- Response metatable and methods
+local response_index = {}
+local response_mt = {__index = response_index}
+
+local function response(t)
+    t = t or { headers = {} }
+    setmetatable(t.headers, headers_mt)
+    return setmetatable(t, response_mt)
+end
+
+function response_index:set(name, value)
+    self.headers[name] = value;
+    return self
+end
+
+function response_index:get(name)
+    return self.headers[name]
+end
+
+function response_index:send(body)
+    if self.state ~= "pending" then
+        error(string.format("Response state is \"%s\", expected \"pending\".",  self.state))
+    end
+
+    local write = self.write
+    body = body or self.body or ""
+    self.headers["Content-Type"] = self.mime or 'text/html'
+
+    -- Modify the res table in-place to conform to luvit http-codec
+    self.code = self.code or 200
+    rawset(self.headers, "code", self.code)
+    write(self.headers);
+    rawset(self.headers, "code", nil)
+
+    -- Write the body.
+    write(body)
+    write()
+    self.state = "done"
+
+    return self
+end
+
+function response_index:status(code)
+    self.code = code
+    return self
+end
+
+function response_index:append(field, ...)
+    local value
+    if type(...) == 'table' then
+        value = table.concat(...)
+    else
+        value = table.concat({...})
+    end
+    local prev = self.headers[field]
+    if prev then
+        self.headers[field] = prev .. tostring(value)
+    else
+        self.headers[field] = tostring(value)
+    end
+end
+
+function response_index:redirect(location)
+    self.code = 302
+    self.headers["Location"] = location
+    return self:send()
+end
+
+-- Server implementation
 local uv = require('uv')
 if uv.constants.SIGPIPE then
     uv.new_signal():start("sigpipe")
@@ -54,8 +205,7 @@ local function makeServer()
     }, Server_mt)
 end
 
--- Modified from https://github.com/creationix/weblit/blob/master/libs/weblit-app.lua
-function Server:handleConnection(binding, rawRead, rawWrite, socket)
+function Server:onConnect(binding, rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
     for head in read do
@@ -96,7 +246,7 @@ function Server:handleConnection(binding, rawRead, rawWrite, socket)
         end
 
         -- Drop non-keepalive and unhandled requets
-        if res.state == "pending" or 
+        if res.state == "pending" or
             res.state == "error" or
             (not (res.keepAlive and head.keepAlive)) then
             break
@@ -147,12 +297,13 @@ function Server:start()
                 local newRead, newWrite = tlsWrap(rawRead, rawWrite, {
                     server = true,
                     key = assert(tls.key, "tls key required"),
-                    cert = assert(tls.cert, "tls cert required")
+                    cert = assert(tls.cert, "tls cert required"),
+                    ca = tls.ca -- TODO - load root ca
                 })
-                return self:handleConnection(binding, newRead, newWrite, socket)
+                return self:onConnect(binding, newRead, newWrite, socket)
             end
         else
-            callback = function(...) return self:handleConnection(binding, ...) end
+            callback = function(...) return self:onConnect(binding, ...) end
         end
 
         -- Wrap callback with an error handler to catch server errors. If the error handler

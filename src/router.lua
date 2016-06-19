@@ -1,5 +1,5 @@
 --[[
-Copyright (c) 2015 Calvin Rose
+Copyright (c) 2016 Calvin Rose
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
@@ -14,17 +14,6 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]]
-
---[[lit-meta
-name = "bakpakin/moonmint-router"
-version = "0.0.1-3"
-dependencies = {}
-description = "Generic router middleware for the moonmint framework."
-tags = {"moonmint", "router", "framework", "routing"}
-license = "MIT"
-author = { name = "Calvin Rose" }
-homepage = "https://github.com/bakpakin/moonmint"
 ]]
 
 local byte = string.byte
