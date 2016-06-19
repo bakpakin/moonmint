@@ -188,7 +188,8 @@ function response_index:redirect(location)
 end
 
 -- Server implementation
-local uv = require('uv')
+local state, uv = pcall(require, 'uv')
+if not state then uv = require 'luv' end
 if uv.constants.SIGPIPE then
     uv.new_signal():start("sigpipe")
 end
