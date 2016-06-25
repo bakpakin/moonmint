@@ -33,7 +33,6 @@ local lower = string.lower
 local pcall = pcall
 local match = string.match
 
-
 -- Pull readWrap and writeWrap from coro-wrapper
 local function readWrap(read, decode)
     local buffer = ""

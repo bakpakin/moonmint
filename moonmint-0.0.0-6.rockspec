@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "0.0.0-4"
+version = "0.0.0-6"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
     tag = version
@@ -16,7 +16,9 @@ dependencies = {
     "luv-coro-net >= 1.8",
     "luv-coro-fs >= 1.8",
     "mimetypes >= 1.0",
-    "lua-path"
+    "lua-path",
+    "bkopenssl >= 0.0",
+    "bit32 >= 5.3"
 }
 build = {
     type = "builtin",
@@ -24,10 +26,11 @@ build = {
         ["moonmint"] = "init.lua",
         ["moonmint.codec.http"] = "src/codec/http.lua",
         ["moonmint.codec.tls"] = "src/codec/tls.lua",
+        ["moonmint.codec.tls.rootca"] = "src/codec/root_ca.dat.lua",
         ["moonmint.server"] = "src/server.lua",
         ["moonmint.static"] = "src/static.lua",
         ["moonmint.util"] = "src/util.lua",
         ["moonmint.router"] = "src/router.lua",
-        ["moonmint.template"] = "src/template.lua"
+        ["moonmint.template"] = "src/template.lua",
     }
 }
