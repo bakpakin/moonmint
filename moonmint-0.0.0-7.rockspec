@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "0.0.0-6"
+version = "0.0.0-7"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
     tag = version
@@ -18,7 +18,7 @@ dependencies = {
     "mimetypes >= 1.0",
     "lua-path",
     "bkopenssl >= 0.0",
-    "bit32 >= 5.3"
+    "bit32"
 }
 build = {
     type = "builtin",
