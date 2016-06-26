@@ -1,7 +1,7 @@
 local moonmint = require("moonmint")
 local app = moonmint()
 
-app:use(moonmint.logger, moonmint.static("."))
+app:use(moonmint.logger)
 
 app:get("/", function(req, res)
     print("Raw Query: ", req.rawQuery)
@@ -9,5 +9,3 @@ app:get("/", function(req, res)
 end)
 
 app:start()
-
-require('luv').run()
