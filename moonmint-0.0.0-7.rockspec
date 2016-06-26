@@ -14,7 +14,6 @@ dependencies = {
     "luv ~> 1.8",
     "luv-coro-channel >= 1.8",
     "luv-coro-net >= 1.8",
-    "luv-coro-fs >= 1.8",
     "mimetypes >= 1.0",
     "bkopenssl >= 0.0",
     "bit32"
@@ -34,6 +33,9 @@ build = {
         ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
         ["moonmint.deps.codec.tls.rootca"] = "deps/codec/root_ca.dat.lua",
-        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua"
+        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua",
+        ["moonmint.deps.headers"] = "deps/headers.lua",
+        ["moonmint.deps.request"] = "deps/request.lua",
+        ["moonmint.deps.response"] = "deps/response.lua"
     }
 }

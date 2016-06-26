@@ -1,30 +1,29 @@
 # moonmint
 
-__moonmint__ is an express like web framework that runs on top of luvi.
+__moonmint__ is an express like web framework for Lua.
 Use complex routing, static file serving, and templating with an extremely
-minimal code base. Does not depend of luvit - full servers can be built with
-lit, the package manager for the luvit platform.
+minimal code base. Uses the libuv binding luv to perform asynchronous operations.
 
 ## Contents
 
-* [Example](#example)
-* [API](#api)
-  * [Fields](#fields)
-  * [Functions](#functions)
-  * [Types](#types)
-    * [Server](#server)
-      * [Methods](#methods)
-    * [Router](#router)
-      * [Fields](#fields-1)
-      * [Methods](#methods-1)
-    * [Request](#request)
-      * [Fields](#fields-2)
-      * [Methods](#methods-2)
-    * [Response](#response)
-      * [Fields](#fields-3)
-      * [Methods](#methods-3)
-  * [Templates](#templates)
-* [Install](#install)
+### [Example](#example)
+### [API](#api)
+* [Fields](#fields)
+* [Functions](#functions)
+* [Types](#types)
+* [Server](#server)
+  * [Methods](#methods)
+* [Router](#router)
+  * [Fields](#fields-1)
+  * [Methods](#methods-1)
+* [Request](#request)
+  * [Fields](#fields-2)
+  * [Methods](#methods-2)
+* [Response](#response)
+  * [Fields](#fields-3)
+  * [Methods](#methods-3)
+* [Templates](#templates)
+### [Install](#install)
 
 ## Example
 
@@ -247,9 +246,17 @@ at the beginning of the insert. To trim from the end, add a '-' symbol to the en
 ```
 
 ## Install
-Download and install __lit__, and the install moonmint in your project directory.
+In order to install moonmint, the following dependencies are needed.
+
+* Luarocks (the package manager)
+* OpenSSL (for the bkopenssl dependecy)
+* CMake (for the luv libuv binding)
+
+Also, make sure that the Lua dev packages are installed on linux
+
+Use luarocks to install
 ```
-lit install bakpakin/moonmint
+luarocks install moonmint
 ```
 ## License
 

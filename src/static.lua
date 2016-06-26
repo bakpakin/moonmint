@@ -17,7 +17,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local mime = require('mimetypes').guess
-local corofs = require 'luv-coro-fs'
+local fs = require 'moonmint.fs'
 local byte = string.byte
 local setmetatable = setmetatable
 local match = string.match
@@ -90,7 +90,7 @@ return function(options)
     options = options or {}
     local base = options.base or '.'
     return setmetatable({
-        fs = corofs.chroot(base),
+        fs = fs.chroot(base),
         cache = {},
         nocache = options.nocache
     }, Static_mt)

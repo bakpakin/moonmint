@@ -21,6 +21,8 @@ local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
+local request = require 'moonmint.deps.request'
+local response = require 'moonmint.deps.response'
 
 local setmetatable = setmetatable
 local rawget = rawget
@@ -62,127 +64,6 @@ local function writeWrap(write, encode)
     function (newEncode)
         encode = newEncode
     end
-end
-
--- HTTP headers meta table
-local headers_mt = {
-    __index = function(self, key)
-        if type(key) ~= "string" then
-            return rawget(self, key)
-        end
-        key = lower(key)
-        for i = 1, #self do
-            local val = rawget(self, i)
-            if lower(val[1]) == key then
-                return val[2]
-            end
-        end
-    end,
-    __newindex = function(self, key, value)
-        if type(key) ~= "string" then
-            return rawset(self, key, value)
-        end
-        local wasset = false
-        key = lower(key)
-        for i = #self, 1, -1 do
-            local val = rawget(self, i)
-            if lower(val[1]) == key then
-                if wasset then
-                    local len = #self
-                    rawset(self, i, rawget(self, len))
-                    rawset(self, len, nil)
-                else
-                    wasset = true
-                    val[2] = value
-                end
-            end
-        end
-        if not wasset then
-            return rawset(self, #self + 1, {key, value})
-        end
-    end
-}
-
--- Request meta table
-local request_index = {}
-local request_mt = {__index = request_index}
-
-function request_index:get(name)
-    return self.headers[name]
-end
-
-local function request(t)
-    t = t or { headers = {} }
-    setmetatable(t.headers, headers_mt)
-    return setmetatable(t, request_mt)
-end
-
--- Response metatable and methods
-local response_index = {}
-local response_mt = {__index = response_index}
-
-local function response(t)
-    t = t or { headers = {} }
-    setmetatable(t.headers, headers_mt)
-    return setmetatable(t, response_mt)
-end
-
-function response_index:set(name, value)
-    self.headers[name] = value;
-    return self
-end
-
-function response_index:get(name)
-    return self.headers[name]
-end
-
-function response_index:send(body)
-    if self.state ~= "pending" then
-        error(string.format("Response state is \"%s\", expected \"pending\".",  self.state))
-    end
-
-    local write = self.write
-    body = body or self.body or ""
-    self.headers["Content-Type"] = self.mime or 'text/html'
-
-    -- Modify the res table in-place to conform to luvit http-codec
-    self.code = self.code or 200
-    rawset(self.headers, "code", self.code)
-    write(self.headers);
-    rawset(self.headers, "code", nil)
-
-    -- Write the body.
-    write(body)
-    write()
-    self.state = "done"
-
-    return self
-end
-
-function response_index:status(code)
-    self.code = code
-    return self
-end
-
-function response_index:append(field, ...)
-    local value
-    if type(...) == 'table' then
-        value = table.concat(...)
-    else
-        value = table.concat({...})
-    end
-    local prev = self.headers[field]
-    if prev then
-        self.headers[field] = prev .. tostring(value)
-    else
-        self.headers[field] = tostring(value)
-    end
-end
-
-function response_index:redirect(location)
-    self.code = 302
-    self.headers["Location"] = location
-    return self:send()
 end
 
 -- Server implementation
