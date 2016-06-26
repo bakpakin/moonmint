@@ -28,6 +28,8 @@ local concat = table.concat
 local tostring = tostring
 local tonumber = tonumber
 
+local uv = require 'luv'
+
 local function bodyParser(req, res, go)
     local parts = {}
     local read = req.read
@@ -220,6 +222,27 @@ local function logger(req, res, go)
     print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
 end
 
+-- Generate a uuid v4
+local uuidv4
+do
+    local digits = '0123456789abcdef'
+    local template = 'xxxxxx-xxxx-4xxx-Nxxx-xxxxxxxxxxxx'
+    local random = math.random
+    local char = string.char
+    math.randomseed(uv.now())
+    local function replacer(c)
+        if c == 'x' then
+            return char(digits:byte(random(1, 16)))
+        else
+            return char(digits:byte(random(9, 12)))
+        end
+    end
+    function uuidv4()
+        local ret = template:gsub('[xN]', replacer)
+        return ret
+    end
+end
+
 return {
     urlEncode = urlEncode,
     urlDecode = urlDecode,
@@ -229,5 +252,6 @@ return {
     htmlUnescape = htmlUnescape,
     logger = logger,
     bodyParser = bodyParser,
-    queryParser = queryParser
+    queryParser = queryParser,
+    uuidv4 = uuidv4
 }

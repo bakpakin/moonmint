@@ -16,6 +16,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+local uv = require 'luv'
 local createServer = require('luv-coro-net').createServer
 local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
@@ -67,8 +68,6 @@ local function writeWrap(write, encode)
 end
 
 -- Server implementation
-local state, uv = pcall(require, 'uv')
-if not state then uv = require 'luv' end
 if uv.constants.SIGPIPE then
     uv.new_signal():start("sigpipe")
 end
