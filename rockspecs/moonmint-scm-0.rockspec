@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "scm0"
+version = "scm-0"
 source = {
     url = "git://github.com/bakpakin/moonmint.git"
 }
