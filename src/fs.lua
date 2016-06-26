@@ -193,7 +193,6 @@ function fs.scandir(path)
     end
 end
 
-
 function fs.readFile(path)
     local fd, stat, data, err
     fd, err = fs.open(path)

@@ -13,18 +13,19 @@ minimal code base. Uses the libuv binding luv to perform asynchronous operations
 * [Fields](#fields)
 * [Functions](#functions)
 * [Types](#types)
-* [Server](#server)
-  * [Methods](#methods)
-* [Router](#router)
-  * [Fields](#fields-1)
-  * [Methods](#methods-1)
-* [Request](#request)
-  * [Fields](#fields-2)
-  * [Methods](#methods-2)
-* [Response](#response)
-  * [Fields](#fields-3)
-  * [Methods](#methods-3)
+  * [Server](#server)
+    * [Methods](#methods)
+  * [Router](#router)
+    * [Fields](#fields-1)
+    * [Methods](#methods-1)
+  * [Request](#request)
+    * [Fields](#fields-2)
+    * [Methods](#methods-2)
+  * [Response](#response)
+    * [Fields](#fields-3)
+    * [Methods](#methods-3)
 * [Templates](#templates)
+* [Files](#files)
 
 ### [Install](#install)
 
@@ -164,7 +165,7 @@ Represents an HTTP response. Constructed for every connection by the Server.
 
 ##### Methods
 
-All Reponse methods return the Response object, so the methods can be chained.
+All Response methods return the Response object, so the methods can be chained.
 
 * `Response:set(header, value)` - Set a header.
 * `Response:append(header, ...)` - Append to a header, creating it if it doesn't yet exist.
@@ -206,7 +207,7 @@ This does plain text substitution into the HTML document. It also escapes the HT
 escape the HTML, prefix with the '&' symbol. In the above example, `innerStuff` is not HTML escaped.
 
 One can also inject Lua into the template functions, which are compiled into Lua and loaded via `loadstring`.
-Lua is inject inside percent brackets `{% %}`. To access the argumnnet passed to the template, reference the
+Lua is inject inside percent brackets `{% %}`. To access the argument passed to the template, reference the
 `content` variable.
 
 ```html
@@ -248,6 +249,59 @@ at the beginning of the insert. To trim from the end, add a '-' symbol to the en
 </html>
 ```
 
+### Files
+
+moonmint provides an abstraction around the libuv filesystem that is non blocking. It is based
+on Tim Caswell's [coro-fs](https://github.com/luvit/lit/blob/master/deps/coro-fs.lua), although it has been modified to work synchronously outside of the
+libuv event loop and coroutines. Essentially, you can always use simple syntax to read and write
+to the filesystem, but get awesome asynchronous behavior when you need it.
+
+```lua
+local moonmint = require 'moonmint'
+local app = moonmint()
+local fs = moonmint.fs
+
+-- Outside of libuv event loop - synchronous
+local indexHtml = fs.readFile('myIndex.html')
+
+app:get('/', function (req, res)
+	res:send(indexHtml)
+end)
+
+app:get('/dynamic', function (req, res)
+	-- Inside uv event loop - asynchronous
+	local data, err = fs.readFile('myChangingPage.html')
+	res:send(data)
+end)
+
+app:start()
+```
+The moonmint fs module supports the same operations as coro-fs. The operations
+are for the most part asynchronous wrappers around the libuv functions, with
+a few goodies thrown in link `fs.rmrf` and `fs.mkdirp`.
+
+* `fs.mkdir`
+* `fs.open`
+* `fs.unlink`
+* `fs.stat`
+* `fs.lstat`
+* `fs.fstat`
+* `fs.chmod`
+* `fs.fchmod`
+* `fs.read`
+* `fs.write`
+* `fs.close`
+* `fs.symlink`
+* `fs.readlink`
+* `fs.access`
+* `fs.rmdir`
+* `fs.rmrf`
+* `fs.scandir`
+* `fs.readFile`
+* `fs.writeFile`
+* `fs.mkdirp`
+* `fs.chroot`
+
 ## Install
 In order to install moonmint, the following dependencies are needed.
 
@@ -255,12 +309,15 @@ In order to install moonmint, the following dependencies are needed.
 * OpenSSL (for the bkopenssl dependecy)
 * CMake (for the luv libuv binding)
 
-Also, make sure that the Lua dev packages are installed on linux
+Also, make sure that the Lua dev packages are installed on linux.
+On OSX using brew openssl, you may need to provide the openssl
+directory to luarocks to install bkopenssl.
 
 Use luarocks to install
 ```
 luarocks install moonmint
 ```
+
 ## License
 
 MIT
