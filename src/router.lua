@@ -132,9 +132,25 @@ end
 -- Collapse multiple middlewares into one.
 local function makeChain(...)
     if select('#', ...) < 2 then
-        return ...
+        local mw = ...
+        if type(mw) == 'string' then
+            local index = mw
+            mw = function (req, res)
+                return res:send(index)
+            end
+        end
+        return mw
     else
         local middlewares = {...}
+        -- Convert string middlewares to functions
+        for i = 1, #middlewares do
+            local data = middlewares[i]
+            if type(data) == 'string' then
+                middlewares[i] = function (req, res)
+                    return res:send(data)
+                end
+            end
+        end
         return function(req, res, go)
             return chain(middlewares, 1, res, res, go)
         end
@@ -196,7 +212,14 @@ function router:use(...)
         return subroute(self, ...)
     end
     for i = 1, select("#", ...) do
-        self[#self + 1] = select(i, ...)
+        local mw = select(i, ...)
+        if type(mw) == 'string' then
+            local index = mw
+            mw = function(req, res)
+                return res:send(index)
+            end
+        end
+        self[#self + 1] = mw
     end
     return self
 end

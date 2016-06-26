@@ -29,7 +29,7 @@ function response_index:get(name)
     return self.headers[name]
 end
 
-function response_index:send(body)
+function response_index:send(body, status)
     if self.state ~= "pending" then
         error(string.format("Response state is \"%s\", expected \"pending\".",  self.state))
     end
@@ -39,7 +39,7 @@ function response_index:send(body)
     self.headers["Content-Type"] = self.mime or 'text/html'
 
     -- Modify the res table in-place to conform to luvit http-codec
-    self.code = self.code or 200
+    self.code = status or self.code or 200
     rawset(self.headers, "code", self.code)
     write(self.headers);
     rawset(self.headers, "code", nil)

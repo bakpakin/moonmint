@@ -31,18 +31,24 @@ minimal code base. Uses the libuv binding luv to perform asynchronous operations
 
 ## Example
 
+moonmint is really simple - probably the simplest way to get a running webserver in Lua out there!
+The following example servers serve "Hello, World!" on the default port 8080.
+
 ```lua
 local moonmint = require 'moonmint'
 local app = moonmint()
 
-app:use(moonmint.logger, moonmint.static("."))
-
 app:get("/", function(req, res)
-    print("Raw Query: ", req.rawQuery)
     res:send("Hello, World!")
 end)
 
 app:start()
+```
+
+This can be even shorter if you use chaining and short syntax for sending strings.
+
+```lua
+require('moonmint')():get('/', 'Hello, World!'):start()
 ```
 
 ## API
@@ -63,6 +69,10 @@ app:start()
   is a table, and the following options are supported.
   * `base` - The root path on disk to serve files from. Defaults to '.'.
   * `nocache` - A boolean that will disable caching if truthy.
+  * `fallthrough` - By default if a route is not found, the static middleware falls through and calls the next middleware in
+    the chain. By setting fallthrough to false, the server can serve a simple 404 page instead.
+  * `renderIndex` - By default, if the client requests a directoy, an index.html file in that directory
+    is searched for. If renderIndex is set to false, then the index.html will not be searched for.
 * `moonmint.template(source)` - Creates a new template function from a string. If the template source cannot be
   parsed, then returns nil and an error as the second parameter. See the Templates section for more info.
 
@@ -119,6 +129,8 @@ All Router methods return the Router for chaining.
 * `Router:use([route], ...)` - Uses middleware under the optional route. Multiple middleware can be chained for use
   in series. Middleware functions follow the express-connect signature of `middleware(req, res, go)`. The `req`
   parameter is the Request, the `res` parameter is the response, and `go` calls the next middleware in the chain.
+  Strings can be used for middleware as well. They are shorthand for sending the string back to the client and not calling
+  go.
 * `Router:route(options, ...)` - Uses middleware on requests that match the `options` table. Options:
 	* `path` - The route string or function used to match request paths.
 	* `host` - A Lua pattern or function used to match the request host.

@@ -8,4 +8,8 @@ app:get("/", function(req, res)
     res:send("Hello, World!")
 end)
 
+app:use('/', moonmint.static {
+    fallthrough = false
+})
+
 app:start()

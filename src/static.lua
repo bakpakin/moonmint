@@ -39,6 +39,14 @@ local Static_mt = {
     __index = Static
 }
 
+function Static:_notFound(req, res, go)
+    if self.fallthrough then
+        return go()
+    else
+        return res:send('Not Found', 404)
+    end
+end
+
 function Static:doRoute(req, res, go)
 
     if req.method ~= "GET" then return go() end
@@ -49,16 +57,20 @@ function Static:doRoute(req, res, go)
     local nocache = self.nocache
 
     local stat = fs.stat(path)
-    if not stat then return go() end
+    if not stat then return self:_notFound(req, res, go) end
 
     if stat.type == "directory" then
-        if byte(path, -1) == 47 then
-            path = path .. "index.html"
+        if self.renderIndex then
+            if byte(path, -1) == 47 then
+                path = path .. "index.html"
+            else
+                path = path .. "/index.html"
+            end
+            stat = fs.stat(path);
+            if not stat then return self:_notFound(req, res, go) end
         else
-            path = path .. "/index.html"
+            return self:_notFound(req, res, go)
         end
-        stat = fs.stat(path);
-        if not stat then return go() end
     end
 
     local cachedResponse = cache[path]
@@ -70,7 +82,7 @@ function Static:doRoute(req, res, go)
     else
         cachedResponse = makeCacheEntry(fs, path, stat)
         if not cachedResponse then
-            return go()
+            return self:_notFound(req, res, go)
         end
         if not nocache then cache[path] = cachedResponse end
         res.code = 200
@@ -87,11 +99,26 @@ function Static:clearCache()
 end
 
 return function(options)
+    if type(options) == 'string' then
+        options = {
+            base = options
+        }
+    end
     options = options or {}
     local base = options.base or '.'
+    local fallthrough = true
+    if options.fallthrough ~= nil then
+        fallthrough = options.fallthrough
+    end
+    local renderIndex = true
+    if options.renderIndex ~= nil then
+        renderIndex = options.renderIndex
+    end
     return setmetatable({
         fs = fs.chroot(base),
         cache = {},
-        nocache = options.nocache
+        nocache = options.nocache,
+        fallthrough = fallthrough,
+        renderIndex = renderIndex
     }, Static_mt)
 end
