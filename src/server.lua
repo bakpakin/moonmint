@@ -119,7 +119,7 @@ function Server:onConnect(binding, rawRead, rawWrite, socket)
 
         -- Use middleware and catch errors.
         -- Errors outside of this will not  be caught.
-        local status = pcall(self._router.doRoute, self._router, req, res)
+        local status, err = pcall(self._router.doRoute, self._router, req, res)
         if not status then
             res.state = "error"
             pcall(binding.errorHandler, err, req, res, self, binding)
