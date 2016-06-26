@@ -1,3 +1,8 @@
+local lower = string.lower
+local rawget = rawget
+local rawset = rawset
+local type = type
+
 return {
     __index = function(self, key)
         if type(key) ~= "string" then
