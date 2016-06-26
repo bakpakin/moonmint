@@ -7,7 +7,9 @@ minimal code base. Uses the libuv binding luv to perform asynchronous operations
 ## Contents
 
 ### [Example](#example)
+
 ### [API](#api)
+
 * [Fields](#fields)
 * [Functions](#functions)
 * [Types](#types)
@@ -23,6 +25,7 @@ minimal code base. Uses the libuv binding luv to perform asynchronous operations
   * [Fields](#fields-3)
   * [Methods](#methods-3)
 * [Templates](#templates)
+
 ### [Install](#install)
 
 ## Example
