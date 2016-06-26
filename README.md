@@ -65,12 +65,16 @@ app:start()
   * `nocache` - A boolean that will disable caching if truthy.
 * `moonmint.template(source)` - Creates a new template function from a string. If the template source cannot be
   parsed, then returns nil and an error as the second parameter. See the Templates section for more info.
+
+### Utility Functions
+
 * `moonmint.queryEncode(obj)` - Encodes a Lua object as a url query string.
 * `moonmint.queryDecode(str)` - Decodes a query string into a Lua table.
 * `moonmint.urlEncode(str)` - Encodes a Lua string into a url safe string.
 * `moonmint.urlDecode(str)` - Decodes a url string into a Lua string.
 * `moonmint.htmlEscape(str)` - Escapes a string for safe input into an HTML page.
 * `moonmint.htmlUnescape(str)` - Unescape text from HTML.
+* `moonmint.uuidv4()` - Creates a new random UUID v4.
 
 ### Types
 
