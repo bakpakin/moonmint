@@ -17,9 +17,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local createServer = require('luv-coro-net').createServer
-local httpCodec = require 'moonmint.codec.http'
--- local tlsWrap = require 'moonmint.codec.tls'
-local tlsWrap = function(a, b, c) return a, b, c end
+local httpCodec = require 'moonmint.deps.codec.http'
+local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 
@@ -238,10 +237,11 @@ function Server:onConnect(binding, rawRead, rawWrite, socket)
         }
 
         -- Use middleware and catch errors.
+        -- Errors outside of this will not  be caught.
         local status = pcall(self._router.doRoute, self._router, req, res)
         if not status then
             res.state = "error"
-            binding.errorHandler(err, req, res, self, binding)
+            pcall(binding.errorHandler, err, req, res, self, binding)
             return
         end
 
@@ -254,7 +254,8 @@ function Server:onConnect(binding, rawRead, rawWrite, socket)
 
         -- Handle upgrade requests
         if res.upgrade then
-            return res.upgrade(read, write, updateDecoder, updateEncoder, socket)
+            pcall(res.upgrade, read, write, updateDecoder, updateEncoder, socket)
+            return
         end
 
     end
@@ -279,10 +280,6 @@ local function defaultErrorHandler(err, req, res, server, binding)
     res:status(500):send('Internal Server Error')
 end
 
-local function defaultGlobalErrorHandler(err, server, binding)
-    print('Uncaught Internal Server Error:', err)
-end
-
 function Server:start(options)
     if not options then
         options = {}
@@ -305,26 +302,11 @@ function Server:start(options)
                     server = true,
                     key = assert(tls.key, "tls key required"),
                     cert = assert(tls.cert, "tls cert required"),
-                    ca = tls.ca -- TODO - load root ca
                 })
                 return self:onConnect(binding, newRead, newWrite, socket)
             end
         else
             callback = function(...) return self:onConnect(binding, ...) end
-        end
-
-        -- Wrap callback with an error handler to catch server errors. If the error handler
-        -- is expicitely false, don't use any error handler
-        local wrappedCallback = callback
-        if binding.globalErrorHandler ~= false then
-            local gErrorHandler = binding.globalErrorHandler or defaultGlobalErrorHandler
-            wrappedCallback = function(...)
-                local status, a, b, c, d, e, f = pcall(callback, ...)
-                if not status then
-                    return gErrorHandler(a, self, binding)
-                end
-                return a, b, c, d, e, f
-            end
         end
 
         -- Set request error handler unless explicitely disabled
@@ -333,12 +315,12 @@ function Server:start(options)
         end
 
         -- Create server with coro-net
-        createServer(binding, wrappedCallback)
+        createServer(binding, callback)
         if binding.onStart then
             binding.onStart(self, binding)
         end
     end
-    if not options.noUVRun then
+    if not options.noUVRun and not uv.loop_alive() then
         uv.run()
     end
 end

@@ -24,6 +24,7 @@ moonmint.server = server
 moonmint.static = require "moonmint.static"
 moonmint.template = require "moonmint.template"
 moonmint.router = require "moonmint.router"
+moonmint.fs = require "moonmint.fs"
 local util = require "moonmint.util"
 for k, v in pairs(util) do
     moonmint[k] = v

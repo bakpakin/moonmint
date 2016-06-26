@@ -16,7 +16,6 @@ dependencies = {
     "luv-coro-net >= 1.8",
     "luv-coro-fs >= 1.8",
     "mimetypes >= 1.0",
-    "lua-path",
     "bkopenssl >= 0.0",
     "bit32"
 }
@@ -24,13 +23,17 @@ build = {
     type = "builtin",
     modules = {
         ["moonmint"] = "init.lua",
-        ["moonmint.codec.http"] = "src/codec/http.lua",
-        ["moonmint.codec.tls"] = "src/codec/tls.lua",
-        ["moonmint.codec.tls.rootca"] = "src/codec/root_ca.dat.lua",
+
         ["moonmint.server"] = "src/server.lua",
         ["moonmint.static"] = "src/static.lua",
         ["moonmint.util"] = "src/util.lua",
         ["moonmint.router"] = "src/router.lua",
         ["moonmint.template"] = "src/template.lua",
+        ["moonmint.fs"] = "src/fs.lua",
+
+        ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
+        ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
+        ["moonmint.deps.codec.tls.rootca"] = "deps/codec/root_ca.dat.lua",
+        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua"
     }
 }
