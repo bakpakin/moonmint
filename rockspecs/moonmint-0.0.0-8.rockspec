@@ -32,7 +32,6 @@ build = {
 
         ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
-        ["moonmint.deps.codec.tls.rootca"] = "deps/codec/root_ca.dat.lua",
         ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua",
         ["moonmint.deps.headers"] = "deps/headers.lua",
         ["moonmint.deps.request"] = "deps/request.lua",
