@@ -19,6 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local setmetatable = setmetatable
 local rawget = rawget
 local byte = string.byte
+local tostring = tostring
 
 local bracketTypes = {
     [byte("{")] = "variables",
@@ -55,6 +56,7 @@ local htmlEscapeMap = {
 }
 
 local function htmlEscape(str)
+    str = str or ''
     return str:gsub("[\">/<'&]", htmlEscapeMap)
 end
 
@@ -90,7 +92,7 @@ local function getchr(c)
 end
 
 local function make_safe(text)
-	return ("%q"):format(text):gsub('\n', 'n'):gsub("[\128-\255]", getchr)
+	return ("%q"):format(tostring(text)):gsub('\n', 'n'):gsub("[\128-\255]", getchr)
 end
 
 local function trim_start(s)
@@ -211,7 +213,7 @@ return function(body)
         elseif part.type == "literal" then
             local body = part.body
             if part.htmlEscape then
-                body = htmlEscape(body)
+                body = htmlEscape(tostring(body))
             end
             b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(body))
         end
