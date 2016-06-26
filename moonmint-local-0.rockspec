@@ -1,7 +1,7 @@
 package = "moonmint"
 version = "local-0"
 source = {
-
+    url = "file:////0.0.0.0/home/calvin/code/moonmint"
 }
 description = {
     homepage = "https://github.com/bakpakin/moonmint",

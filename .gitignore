@@ -43,3 +43,5 @@ luac.out
 *.x86_64
 *.hex
 
+# Local rockspec for testing
+moonmint-local-0.rockspec
