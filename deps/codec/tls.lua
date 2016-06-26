@@ -10,22 +10,7 @@ end
 local DEFAULT_CIPHERS = 'ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:' .. -- TLS 1.2
                         'RC4:HIGH:!MD5:!aNULL:!EDH'                     -- TLS 1.0
 
-
--- Load the default root CA
-local DEFAULT_CA_STORE
-do
-    local data = assert(require("moonmint.deps.codec.tls.rootca"))
-    DEFAULT_CA_STORE = openssl.x509.store:new()
-    local index = 1
-    local len = #data
-    while index < len do
-        local len = bit.bor(bit.lshift(data:byte(index), 8), data:byte(index + 1))
-        index = index + 2
-        local cert = assert(openssl.x509.read(data:sub(index, index + len)))
-        index = index + len
-        assert(DEFAULT_CA_STORE:add(cert))
-    end
-end
+-- TODO Use a provided root certificate authority
 
 -- Given a read/write pair, return a new read/write pair for plaintext
 local function wrap(read, write, options)
@@ -63,10 +48,8 @@ local function wrap(read, write, options)
             assert(store:add(ca[i]))
         end
         ctx:cert_store(store)
-    elseif options.noCa then
-        ctx:verify_mode(openssl.ssl.none)
     else
-        ctx:cert_store(DEFAULT_CA_STORE)
+        ctx:verify_mode(openssl.ssl.none)
     end
 
     ctx:options(bit.bor(
