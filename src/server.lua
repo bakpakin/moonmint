@@ -201,8 +201,7 @@ function Server:start(options)
             binding.onStart(self, binding)
         end
     end
-    print (uv.loop_alive())
-    if not options.noUVRun and not uv.loop_alive() then
+    if not options.noUVRun then
         return uv.run()
     end
 end
