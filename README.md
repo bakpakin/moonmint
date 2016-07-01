@@ -2,8 +2,6 @@
 
 ![Travis](https://travis-ci.org/bakpakin/moonmint.svg?branch=master)
 
-![MIT](http://badges.mit-license.org/)
-
 __moonmint__ is an HTTP web framework for Lua.
 Use complex routing, static file serving, and templating with a
 minimal code base. Harness the power of libuv to perform asynchronous operations.
