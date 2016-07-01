@@ -1,4 +1,4 @@
-local util = require "../src/util"
+local util = require "src.util"
 
 local function testEncodeGen(name, encode, decode)
     return function(data, encoded_form)
