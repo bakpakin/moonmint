@@ -1,12 +1,16 @@
 # moonmint
 
-__moonmint__ is an express like web framework for Lua.
-Use complex routing, static file serving, and templating with an extremely
-minimal code base. Uses the libuv binding luv to perform asynchronous operations.
+![Travis](https://travis-ci.org/bakpakin/moonmint.svg?branch=master)
+
+![MIT](http://badges.mit-license.org/)
+
+__moonmint__ is an HTTP web framework for Lua.
+Use complex routing, static file serving, and templating with a
+minimal code base. Harness the power of libuv to perform asynchronous operations.
 
 ## Contents
 
-### [Example](#example)
+### [Example](#example) - A quick example on how to get up and running.
 
 ### [API](#api)
 
@@ -32,6 +36,7 @@ minimal code base. Uses the libuv binding luv to perform asynchronous operations
 ## Example
 
 moonmint is really simple - probably the simplest way to get a running webserver in Lua out there!
+Install with luarocks,  write your server script, and run it!
 The following example servers serve "Hello, World!" on the default port 8080.
 
 ```lua
@@ -48,7 +53,9 @@ app:start()
 This can be even shorter if you use chaining and short syntax for sending strings.
 
 ```lua
-require('moonmint')():get('/', 'Hello, World!'):start()
+require('moonmint')()
+    :get('/', 'Hello, World!')
+    :start()
 ```
 
 ## API
@@ -203,6 +210,9 @@ local template = moonmint.template('Hello, {{currentUser}}!')
 local str = template {
     currentUser = 'Joe'
 }
+
+print(str)
+-- Prints 'Hello, Joe!'
 ```
 
 The first is basic text substitution with double
