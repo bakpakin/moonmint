@@ -2,7 +2,7 @@ local format = [[
 package = "moonmint"
 version = "%s"
 source = {
-    url = "file:////0.0.0.0%s"
+    url = "file:////0.0.0.0%s/%s"
 }
 description = {
     homepage = "https://github.com/bakpakin/moonmint",
@@ -45,6 +45,6 @@ local version = 'local-0'
 local target = ('moonmint-%s.rockspec'):format(version)
 
 local f = assert(io.open(target, 'w'))
-f:write(format:format(version, currentDirectory))
+f:write(format:format(version, currentDirectory, target))
 f:close();
 print(('Wrote to %s.'):format(target))
