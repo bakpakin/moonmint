@@ -29,12 +29,12 @@ build = {
         ["moonmint.router"] = "src/router.lua",
         ["moonmint.template"] = "src/template.lua",
         ["moonmint.fs"] = "src/fs.lua",
+        ["moonmint.headers"] = "src/headers.lua",
+        ["moonmint.request"] = "src/request.lua",
+        ["moonmint.response"] = "src/response.lua",
 
         ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
-        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua",
-        ["moonmint.deps.headers"] = "deps/headers.lua",
-        ["moonmint.deps.request"] = "deps/request.lua",
-        ["moonmint.deps.response"] = "deps/response.lua"
+        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua"
     }
 }

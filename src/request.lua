@@ -16,7 +16,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local headers_mt = require 'moonmint.deps.headers'
+local headers_mt = require 'moonmint.headers'
 
 local request_index = {}
 local request_mt = {__index = request_index}

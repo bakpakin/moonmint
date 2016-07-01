@@ -16,7 +16,9 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local headers_mt = require 'moonmint.deps.headers'
+local headers_mt = require 'moonmint.headers'
+local mime = require('mimetypes').guess
+local fs = require 'moonmint.fs'
 local response_index = {}
 local response_mt = {__index = response_index}
 
@@ -76,6 +78,15 @@ function response_index:redirect(location)
     self.code = 302
     self.headers["Location"] = location
     return self:send()
+end
+
+function response_index:sendFile(filename)
+    local body, err = fs:readFile(filename)
+    if err then
+        return res:status(404):send()
+    end
+    res.mime = mime(filename)
+    return res:send(body)
 end
 
 return function (t)

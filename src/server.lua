@@ -22,8 +22,8 @@ local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
-local request = require 'moonmint.deps.request'
-local response = require 'moonmint.deps.response'
+local request = require 'moonmint.request'
+local response = require 'moonmint.response'
 
 local setmetatable = setmetatable
 local rawget = rawget
