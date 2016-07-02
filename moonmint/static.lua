@@ -53,8 +53,6 @@ function Static:doRoute(req, res, go)
     local path = "." .. req.path
 
     local fs = self.fs
-    local cache = self.cache
-    local nocache = self.nocache
 
     local stat = fs.stat(path)
     if not stat then return self:_notFound(req, res, go) end
@@ -73,23 +71,13 @@ function Static:doRoute(req, res, go)
         end
     end
 
-    local cachedResponse = cache[path]
+    -- Read file
+    local body = fs.readFile(path)
+    if not body then return self:_notFound(req, res, go) end
+    local mime = mime(path)
+    res.mime = mime
+    return res:send(body, 200)
 
-    if cachedResponse and cachedResponse.time == stat.mtime then
-        res.code = 200
-        res.body = cachedResponse.body
-        res.mime = cachedResponse.mime
-    else
-        cachedResponse = makeCacheEntry(fs, path, stat)
-        if not cachedResponse then
-            return self:_notFound(req, res, go)
-        end
-        if not nocache then cache[path] = cachedResponse end
-        res.code = 200
-        res.body = cachedResponse.body
-        res.mime = cachedResponse.mime
-    end
-    return res:send()
 end
 
 Static_mt.__call = Static.doRoute
@@ -116,8 +104,6 @@ return function(options)
     end
     return setmetatable({
         fs = fs.chroot(base),
-        cache = {},
-        nocache = options.nocache,
         fallthrough = fallthrough,
         renderIndex = renderIndex
     }, Static_mt)

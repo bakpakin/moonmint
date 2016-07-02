@@ -203,6 +203,8 @@ local function htmlUnescapeHelper(n, s)
         return utf8_char(tonumber(s, 10)) -- Decimal
     elseif n == '#x' then
         return utf8_char(tonumber(s, 16)) -- Hex
+    elseif n == 'x' then
+        return htmlUnescapeHelper('', n .. s)
     elseif entityToRaw[s] then
         return entityToRaw[s]
     else

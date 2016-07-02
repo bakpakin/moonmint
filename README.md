@@ -106,7 +106,8 @@ The main moonmint object used construct a moonmint app. All Server methods retur
   * `tls`: An optional table used to enable SSL. Should contain `key` and `cert`, the SSL credentials as strings.
   * `onStart`: An optional callback that is called when the Server starts.
 * `Server:start()` - Starts the server on all bindings. Returns the Server.
-* `Server:static(realpath, urlpath)`
+* `Server:static(realpath, urlpath)`: Serves static files from the filesystem from url path to
+  the urlpath. If urlpath is omitted, they will be the same.
 
 All servers contain a main Router. The Router's methods are aliased to the server, so one
 can call `server:use(mw)` or `server:get('/', handler)`.
@@ -139,9 +140,9 @@ All Router methods return the Router for chaining.
 * `Router:route(options, ...)` - Uses middleware on requests that match the `options` table. Options:
 	* `path` - The route string or function used to match request paths.
 	* `host` - A Lua pattern or function used to match the request host.
-	* `method` - A string, table, or function to match an HTTP verb. Use '*' to match all. Use a list-like table of HTTP verbs
+	* `method` - A string, table, or function to match an HTTP verb. Use `*` to match all. Use a list-like table of HTTP verbs
 	  to match a set of verbs.
-* `Router:all(route, ...)` - Route alias for '*'.
+* `Router:all(route, ...)` - Route alias for `*`.
 * `Router:get(route, ...)` - Route alias for 'GET'.
 * `Router:put(route, ...)` - Route alias for 'PUT'.
 * `Router:post(route, ...)` - Route alias for 'POST'.

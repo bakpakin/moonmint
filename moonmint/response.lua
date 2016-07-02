@@ -40,7 +40,7 @@ function response_index:send(body, status)
     body = body or self.body or ""
     self.headers["Content-Type"] = self.mime or 'text/html'
 
-    -- Modify the res table in-place to conform to luvit http-codec
+    -- Modify the headers table in-place to conform to luvit http-codec
     self.code = status or self.code or 200
     rawset(self.headers, "code", self.code)
     write(self.headers);

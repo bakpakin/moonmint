@@ -21,21 +21,21 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["moonmint"] = "init.lua",
+        ["moonmint"] = "moonmint/init.lua",
 
-        ["moonmint.server"] = "src/server.lua",
-        ["moonmint.static"] = "src/static.lua",
-        ["moonmint.util"] = "src/util.lua",
-        ["moonmint.router"] = "src/router.lua",
-        ["moonmint.template"] = "src/template.lua",
-        ["moonmint.fs"] = "src/fs.lua",
-        ["moonmint.headers"] = "src/headers.lua",
-        ["moonmint.request"] = "src/request.lua",
+        ["moonmint.server"] = "moonmint/server.lua",
+        ["moonmint.static"] = "moonmint/static.lua",
+        ["moonmint.util"] = "moonmint/util.lua",
+        ["moonmint.router"] = "moonmint/router.lua",
+        ["moonmint.template"] = "moonmint/template.lua",
+        ["moonmint.fs"] = "moonmint/fs.lua",
+        ["moonmint.headers"] = "moonmint/headers.lua",
+        ["moonmint.request"] = "moonmint/request.lua",
         ["moonmint.response"] = "src/response.lua",
 
-        ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
-        ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
-        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua"
+        ["moonmint.deps.codec.http"] = "moonmint/deps/codec/http.lua",
+        ["moonmint.deps.codec.tls"] = "moonmint/deps/codec/tls.lua",
+        ["moonmint.deps.pathjoin"] = "moonmint/deps/pathjoin.lua"
     }
 }
 ]]
