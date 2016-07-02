@@ -67,11 +67,6 @@ local function writeWrap(write, encode)
     end
 end
 
--- Server implementation
-if uv.constants.SIGPIPE then
-    uv.new_signal():start("sigpipe")
-end
-
 local Server = {}
 local Server_mt = {
     __index = Server
@@ -164,17 +159,13 @@ function Server:start(options)
     if not options then
         options = {}
     end
-    -- Add bindings in options
-    for i, binding in ipairs(options) do
-        self.bind(binding)
-    end
     local bindings = self.bindings
     if #bindings < 1 then
         self:bind()
     end
     for i = 1, #bindings do
         local binding = bindings[i]
-        local tls = binding.tls
+        local tls = binding.tls or options.tls
         local callback
         if tls then
             callback = function(rawRead, rawWrite, socket)
@@ -191,13 +182,18 @@ function Server:start(options)
 
         -- Set request error handler unless explicitely disabled
         if binding.errorHandler ~= false then
-            binding.errorHandler = binding.errorHandler or defaultErrorHandler
+            if options.errorHandler~= false then
+                binding.errorHandler = binding.errorHandler or
+                    options.errorHandler or
+                    defaultErrorHandler
+            end
         end
 
         -- Create server with coro-net
         createServer(binding, callback)
-        if binding.onStart then
-            binding.onStart(self, binding)
+        local onStart = binding.onStart or options.onStart
+        if onStart then
+            onStart(self, binding)
         end
     end
     if not options.noUVRun then

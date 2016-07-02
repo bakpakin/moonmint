@@ -209,7 +209,7 @@ function fs.writeFile(path, data, mkdir)
     local fd, success, err
     fd, err = fs.open(path, "w")
     if err then
-        if mkdir and string.match(err, "^ENOENT:") then
+        if mkdir and err:match("^ENOENT:") then
             success, err = fs.mkdirp(pathJoin(path, ".."))
             if success then return fs.writeFile(path, data) end
         end
@@ -222,10 +222,10 @@ end
 
 function fs.mkdirp(path, mode)
     local success, err = fs.mkdir(path, mode)
-    if success or string.match(err, "^EEXIST") then
+    if success or err:match("^EEXIST") then
         return true
     end
-    if string.match(err, "^ENOENT:") then
+    if err:mathc("^ENOENT:") then
         success, err = fs.mkdirp(pathJoin(path, ".."), mode)
         if not success then return nil, err end
         return fs.mkdir(path, mode)
