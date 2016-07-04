@@ -298,15 +298,39 @@ local function makeAlias(method, alias)
     end
 end
 
-makeAlias("GET", "get")
-makeAlias("PUT", "put")
-makeAlias("POST", "post")
-makeAlias("DELETE", "delete")
-makeAlias("HEAD", "head")
-makeAlias("OPTIONS", "options")
-makeAlias("TRACE", "trace")
-makeAlias("CONNECT", "connect")
+local function alias(method)
+    makeAlias(method:upper(), method:lower())
+end
+
 makeAlias("*", "all")
+
+-- HTTP version 1.1
+alias('get')
+alias('put')
+alias('post')
+alias('delete')
+alias('head')
+alias('options')
+alias('trace')
+alias('connect')
+
+-- WebDAV
+alias('bcopy')
+alias('bdelete')
+alias('bmove')
+alias('bpropfind')
+alias('bproppatch')
+alias('copy')
+alias('lock')
+alias('mkcol')
+alias('move')
+alias('notify')
+alias('poll')
+alias('propfind')
+alias('search')
+alias('subscribe')
+alias('unlock')
+alias('unsubscribe')
 
 router_mt = {
     __index = router,

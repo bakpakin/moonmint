@@ -77,9 +77,19 @@ local function file(path)
     }
 end
 
+function redirect(location)
+    return {
+        code = 302,
+        headers = setmetatable({
+            {'Location', location},
+        }, headersMeta)
+    }
+end
+
 return setmetatable({
     file = file,
     normalizer = normalizer,
+    redirect = redirect,
     create = responsify
 }, {
     __call = function(self, ...)

@@ -16,20 +16,9 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local match = string.match
-local gmatch = string.gmatch
-local byte = string.byte
-local gsub = string.gsub
-local char = string.char
-local upper = string.upper
 local format = string.format
-local floor = math.floor
 local concat = table.concat
-local tostring = tostring
-local tonumber = tonumber
-local setmetatable = setmetatable
-
-local uv = require 'luv'
+local response = require 'moonmint.response'
 
 local function bodyParser(req, go)
     local parts = {}
@@ -57,30 +46,13 @@ local function logger(req, go)
     return res
 end
 
--- Generate a uuid v4
-local uuidv4
-do
-    local digits = '0123456789abcdef'
-    local template = 'xxxxxx-xxxx-4xxx-Nxxx-xxxxxxxxxxxx'
-    local random = math.random
-    local char = string.char
-    math.randomseed(uv.now())
-    local function replacer(c)
-        if c == 'x' then
-            return char(digits:byte(random(1, 16)))
-        else
-            return char(digits:byte(random(9, 12)))
-        end
-    end
-    function uuidv4()
-        local ret = template:gsub('[xN]', replacer)
-        return ret
-    end
+local function teapot()
+    return response(418)
 end
 
 return {
     logger = logger,
     bodyParser = bodyParser,
     queryParser = queryParser,
-    uuidv4 = uuidv4
+    teapot = teapot
 }

@@ -24,12 +24,7 @@ local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 
 local setmetatable = setmetatable
-local rawget = rawget
-local rawset = rawset
 local type = type
-local select = select
-local tremove = table.remove
-local lower = string.lower
 local pcall = pcall
 local match = string.match
 
@@ -121,14 +116,9 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         end
 
         -- Write response
-        write {
-            code = res.code or 200,
-            headers = res.headers,
-            version = res.version or req.version
-        }
-
-        -- Write the body
-        write(tostring(res.body))
+        write(res)
+        local body = res.body
+        write(body and tostring(body))
         write()
 
         -- Drop non-keepalive and unhandled requets
@@ -223,7 +213,7 @@ end
 
 -- Duplicate router functions for the server, so routes and middleware can be placed
 -- directly on the server.
-local function routerWrap(fname)
+local function alias(fname)
     Server[fname] = function(self, ...)
         local r = self._router
         r[fname](r, ...)
@@ -231,16 +221,36 @@ local function routerWrap(fname)
     end
 end
 
-routerWrap("use")
-routerWrap("route")
-routerWrap("get")
-routerWrap("put")
-routerWrap("post")
-routerWrap("delete")
-routerWrap("options")
-routerWrap("trace")
-routerWrap("connect")
-routerWrap("all")
-routerWrap("head")
+alias("use")
+alias("route")
+alias("all")
+
+-- HTTP version 1.1
+alias('get')
+alias('put')
+alias('post')
+alias('delete')
+alias('head')
+alias('options')
+alias('trace')
+alias('connect')
+
+-- WebDAV
+alias('bcopy')
+alias('bdelete')
+alias('bmove')
+alias('bpropfind')
+alias('bproppatch')
+alias('copy')
+alias('lock')
+alias('mkcol')
+alias('move')
+alias('notify')
+alias('poll')
+alias('propfind')
+alias('search')
+alias('subscribe')
+alias('unlock')
+alias('unsubscribe')
 
 return makeServer

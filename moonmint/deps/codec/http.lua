@@ -82,19 +82,22 @@ local function encoder()
             assert(path and #path > 0, "expected non-empty path")
             head = { item.method .. ' ' .. item.path .. ' HTTP/' .. version }
         else
-            local reason = item.reason or STATUS_CODES[item.code]
-            head = { 'HTTP/' .. version .. ' ' .. item.code .. ' ' .. reason }
+            local code = item.code or 200
+            local reason = item.reason or STATUS_CODES[code]
+            head = { 'HTTP/' .. version .. ' ' .. code .. ' ' .. reason }
         end
         headers = item.headers or (item[1] and item)
         if headers then
             for i = 1, #headers do
-                local key, value = unpack(headers[i])
-                local lowerKey = lower(key)
-                if lowerKey == "transfer-encoding" then
+                local header = headers[i]
+                local key, value = headers[1], header[2]
+                local first = key:byte()
+                -- Check if the first letter is T or t before lower
+                if (first == 116 or first == 84) and
+                    lower(key) == "transfer-encoding" then
                     chunkedEncoding = lower(value) == "chunked"
                 end
-                value = gsub(tostring(value), "[\r\n]+", " ")
-                head[#head + 1] = key .. ': ' .. tostring(value)
+                head[#head + 1] = gsub(key .. ': ' .. tostring(value), '[\r\n]+', ' ')
             end
         end
         head[#head + 1] = '\r\n'
