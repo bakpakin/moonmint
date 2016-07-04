@@ -67,12 +67,11 @@ local backslashEscapeMap = {
 }
 
 local function backslashSub(c)
-    local letter = c:byte(2)
-    return backslashEscapeMap[letter] or letter
+    return backslashEscapeMap[c] or c
 end
 
 local function backslashEscape(str)
-    return str:gsub('%\\.', backslashSub)
+    return str:gsub('%\\(.)', backslashSub)
 end
 
 local function skipToBracket(str, i)
@@ -158,7 +157,7 @@ local function primaryEscape(str)
         -- Append the body of the brackets
         local htmlEscape = true
         local body = str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0))
-        if btynemame ~= 'literal' then
+        if btypename ~= 'literal' then
             body = trim(body)
             if body:byte() == 38 then
                 htmlEscape = false
