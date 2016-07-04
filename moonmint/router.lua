@@ -199,10 +199,12 @@ local function subroute(self, path, ...)
                 reqp[captures[i]] = matches[i]
             end
         end
-        return middleware(req, function()
+        local res = middleware(req, function()
             req.path = oldPath
             return go()
         end)
+        req.path = oldPath
+        return res
     end)
 end
 
