@@ -24,12 +24,12 @@ local tonumber = tonumber
 
 -- For coercing responses into tables
 local toResponse = {
-    ['string'] = function(res, code)
+    ['string'] = function(res, code, mime)
         return {
             code = code and tonumber(code) or 200,
             headers = setmetatable({
                 {'Content-Length', #res},
-                {'Content-Type', 'text/html'}
+                {'Content-Type', mime or 'text/html'}
             }, headersMeta),
             body = res
         }
