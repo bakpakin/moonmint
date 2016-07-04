@@ -17,23 +17,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local mime = require('mimetypes').guess
+local headers = require 'moonmint.headers'
+local response = require 'moonmint.response'
+local pathJoin = require 'moonmint.deps.pathjoin'
 local fs = require 'moonmint.fs'
-local util = require 'moonmint.util'
 local byte = string.byte
 local setmetatable = setmetatable
 local match = string.match
-
-local function makeCacheEntry(fs, path, stat)
-    local body = fs.readFile(path)
-    if not body then return nil end
-    local mime = mime(path)
-    return {
-        path = path,
-        mime = mime,
-        body = body,
-        time = stat.mtime
-    }
-end
 
 local Static = {}
 local Static_mt = {
@@ -44,38 +34,12 @@ function Static:_notFound(req, go)
     if self.fallthrough then
         return go()
     else
-        return {
-            body = 'Not Found',
-            code = 404
-        }
+        return response('Not Found', 404)
     end
 end
 
-function Static:doRoute(req, go)
-
-    if req.method ~= "GET" then return go() end
-    local path = "." .. req.path
-
-    local fs = self.fs
-
-    local stat = fs.stat(path)
-    if not stat then return self:_notFound(req, go) end
-
-    if stat.type == "directory" then
-        if self.renderIndex then
-            if byte(path, -1) == 47 then
-                path = path .. "index.html"
-            else
-                path = path .. "/index.html"
-            end
-            stat = fs.stat(path);
-            if not stat then return self:_notFound(req, go) end
-        else
-            return self:_notFound(req, go)
-        end
-    end
-
-    local body = fs.readFile(path)
+function Static:renderFile(req, go, path)
+    local body = self.fs.readFile(path)
     if not body then return self:_notFound(req, go) end
     local mime = mime(path)
     return {
@@ -83,17 +47,48 @@ function Static:doRoute(req, go)
         headers = setmetatable({
             {'Content-Length', #body},
             {'Content-Type', mime}
-        }, util.headersMeta),
+        }, headersMeta),
         body = body
     }
+end
 
+function Static:renderDirectory(req, go, path)
+    local fs = self.fs
+    local ri = self.renderIndex
+    if type(ri) == 'table' then
+        for i = 1, #ri do
+            local testIndex = pathJoin(path, ri[i])
+            local stat = fs.stat(testIndex);
+            if stat and stat.type ~= directory then
+                return self:renderFile(req, go, testIndex)
+            end
+        end
+        return self:_notFound(req, go)
+    else
+        return self:renderFile(req, go, pathJoin(path, ri))
+    end
+end
+
+function Static:doRoute(req, go)
+    if req.method ~= "GET" then return go() end
+    local path = "." .. req.path
+    local fs = self.fs
+    local stat = fs.stat(path)
+    if not stat then
+        return self:_notFound(req, go)
+    end
+    if stat.type == "directory" then
+        if self.renderIndex then
+            return self:renderDirectory(req, go, path)
+        else
+            return self:_notFound(req, go)
+        end
+    else
+        return self:renderFile(req, go, path)
+    end
 end
 
 Static_mt.__call = Static.doRoute
-
-function Static:clearCache()
-    self.cache = {}
-end
 
 return function(options)
     if type(options) == 'string' then
@@ -107,8 +102,9 @@ return function(options)
     if options.fallthrough ~= nil then
         fallthrough = options.fallthrough
     end
-    local renderIndex = true
-    if options.renderIndex ~= nil then
+    local renderIndex = 'index.html'
+    if options.renderIndex ~= nil and
+        options.renderIndex ~= true then
         renderIndex = options.renderIndex
     end
     return setmetatable({

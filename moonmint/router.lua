@@ -16,6 +16,8 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+local response = require 'moonmint.response'
+
 local byte = string.byte
 local match = string.match
 local gmatch = string.gmatch
@@ -131,28 +133,17 @@ end
 
 -- Converts values besides functions to middleware
 local function toMiddleware(mw)
-    if type(mw) == 'string' then
-        return function ()
-            return {
-                body = mw,
-                code = 200
-            }
-        end
-    elseif type(mw) == 'number' then
-        return function()
-            return {
-                code = mw
-            }
-        end
+    if type(mw) == 'function' then
+        return mw
     elseif type(mw) == 'table' and
         getmetatable(mw) and
-        not getmetatable(mw).__call then
-        -- A non callable table, as far as we can tell.
-        return function()
-            return mw
-        end
-    else
+        getmetatable(mw).__call then
         return mw
+    else
+        local res = response(mw)
+        return function()
+            return res
+        end
     end
 end
 
@@ -208,16 +199,10 @@ local function subroute(self, path, ...)
                 reqp[captures[i]] = matches[i]
             end
         end
-        local goCalled = false
-        middleware(req, function()
-            goCalled = true
-        end)
-
-        -- Reset the request path no matter what, even if the event is consumed.
-        req.path = oldPath
-        if goCalled then
+        return middleware(req, function()
+            req.path = oldPath
             return go()
-        end
+        end)
     end)
 end
 

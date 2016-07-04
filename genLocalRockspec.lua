@@ -27,8 +27,13 @@ build = {
         ["moonmint.static"] = "moonmint/static.lua",
         ["moonmint.util"] = "moonmint/util.lua",
         ["moonmint.router"] = "moonmint/router.lua",
+        ["moonmint.response"] = "moonmint/response.lua",
         ["moonmint.template"] = "moonmint/template.lua",
         ["moonmint.fs"] = "moonmint/fs.lua",
+        ["moonmint.headers"] = "moonmint/headers.lua",
+        ["moonmint.url"] = "moonmint/url.lua",
+        ["moonmint.html"] = "moonmint/html.lua",
+        ["moonmint.query"] = "moonmint/query.lua",
 
         ["moonmint.deps.codec.http"] = "moonmint/deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "moonmint/deps/codec/tls.lua",
@@ -38,6 +43,9 @@ build = {
 ]]
 
 local currentDirectory = io.popen('pwd'):read'*l'
+if not currentDirectory then
+    currentDirectory = io.popen('cd'):read'*l'
+end
 local version = 'local-0'
 local target = ('moonmint-%s.rockspec'):format(version)
 

@@ -2,12 +2,9 @@ local moonmint = require("moonmint")
 local util = moonmint.util
 local app = moonmint()
 
--- app:use(moonmint.logger)
-app:use(util.flexiResponse)
+app:use(util.logger)
 
-app:get("/", function(req)
-    return "Hello, World!"
-end)
+app:get("/", "Hello, World!")
 
 app:use('/', moonmint.static {
     fallthrough = false

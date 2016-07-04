@@ -16,6 +16,7 @@ before_install:
     fi
   - sudo apt-get install $LUA
   - sudo apt-get install $LUA_DEV
+  - sudo apt-get install cmake
   - lua$LUA_SFX -v
   # Install a recent luarocks release
   - wget http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz
@@ -29,6 +30,8 @@ before_install:
 
 install:
   - sudo -E luarocks install busted
+  - $LUA genLocalRockspec.lua
+  - sudo -E luarocks make moonmint-local-0.rockspec
 
 script:
   - sudo -E busted -v

@@ -18,79 +18,71 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local mime = require('mimetypes').guess
 local fs = require 'moonmint.fs'
-local response_index = {}
-local response_mt = {__index = response_index}
+local headersMeta = require 'moonmint.headers'
+local setmetatable = setmetatable
+local tonumber = tonumber
 
-function response_index:set(name, value)
-    self.headers[name] = value;
-    return self
-end
-
-function response_index:get(name)
-    return self.headers[name]
-end
-
-function response_index:send(body, status)
-    if self.state ~= "pending" then
-        error(string.format("Response state is \"%s\", expected \"pending\".",  self.state))
+-- For coercing responses into tables
+local toResponse = {
+    ['string'] = function(res, code)
+        return {
+            code = code and tonumber(code) or 200,
+            headers = setmetatable({
+                {'Content-Length', #res},
+                {'Content-Type', 'text/html'}
+            }, headersMeta),
+            body = res
+        }
+    end,
+    ['number'] = function(res)
+        return {
+            code = res,
+            headers = setmetatable({}, headersMeta)
+        }
+    end,
+    ['table'] = function (res)
+        res.headers = res.headers or {}
+        setmetatable(res.headers, headersMeta)
+        return res
     end
+}
 
-    local write = self.write
-    body = body or self.body or ""
-    self.headers["Content-Type"] = self.mime or 'text/html'
-
-    -- Modify the headers table in-place to conform to luvit http-codec
-    self.code = status or self.code or 200
-    rawset(self.headers, "code", self.code)
-    write(self.headers);
-    rawset(self.headers, "code", nil)
-
-    -- Write the body.
-    write(body)
-    write()
-    self.state = "done"
-
-    return self
-end
-
-function response_index:status(code)
-    self.code = code
-    return self
-end
-
-function response_index:append(field, ...)
-    local value
-    if type(...) == 'table' then
-        value = table.concat(...)
+-- Coerce response into a table
+local function responsify(...)
+    local converter = toResponse[type(...)]
+    if converter then
+        return converter(...)
     else
-        value = table.concat({...})
-    end
-    local prev = self.headers[field]
-    if prev then
-        self.headers[field] = prev .. tostring(value)
-    else
-        self.headers[field] = tostring(value)
+        error('unable to create response from "' .. type(...) .. '"')
     end
 end
 
-function response_index:redirect(location)
-    self.code = 302
-    self.headers["Location"] = location
-    return self:send()
+local function normalizer(req, go)
+    return responsify(go())
 end
 
-function response_index:sendFile(filename)
-    local body, err = fs:readFile(filename)
-    if err then
-        return res:status(404):send()
+local function file(path)
+    local body, err = fs.readFile(path)
+    if not body then
+        error(err)
     end
-    res.mime = mime(filename)
-    return res:send(body)
+    local mime = mime(path)
+    return {
+        code = 200,
+        headers = setmetatable({
+            {'Content-Length', #body},
+            {'Content-Type', mime}
+        }, headersMeta),
+        body = body
+    }
 end
 
-return function (t)
-    t = t or { headers = {} }
-    setmetatable(t.headers, headers_mt)
-    return setmetatable(t, response_mt)
-end
-
+return setmetatable({
+    file = file,
+    normalizer = normalizer,
+    create = responsify
+}, {
+    __call = function(self, ...)
+        return responsify(...)
+    end
+})

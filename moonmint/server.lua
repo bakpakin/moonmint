@@ -109,6 +109,9 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         end
 
         -- Check response
+        if not res then
+            return
+        end
         if type(res) ~= 'table' then
             status, res = pcall(binding.errorHandler,
                 'expected table as response', req, self, binding)

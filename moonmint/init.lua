@@ -26,6 +26,9 @@ moonmint.template = require "moonmint.template"
 moonmint.router = require "moonmint.router"
 moonmint.fs = require "moonmint.fs"
 moonmint.util = require "moonmint.util"
+moonmint.url = require "moonmint.url"
+moonmint.query = require "moonmint.query"
+moonmint.html = require "moonmint.html"
 
 moonmint_mt.__call = function(self, ...)
     return server(...)
