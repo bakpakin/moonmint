@@ -61,6 +61,7 @@ local function normalizer(req, go)
     return responsify(go())
 end
 
+-- Refactor to use uv.sendfile?
 local function file(path)
     local body, err = fs.readFile(path)
     if not body then
@@ -77,9 +78,9 @@ local function file(path)
     }
 end
 
-function redirect(location)
+function redirect(location, code)
     return {
-        code = 302,
+        code = code or 302,
         headers = setmetatable({
             {'Location', location},
         }, headersMeta)

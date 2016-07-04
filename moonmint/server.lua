@@ -22,6 +22,7 @@ local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
+local headers = require 'moonmint.headers'
 
 local setmetatable = setmetatable
 local type = type
@@ -93,6 +94,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             version = head.version,
             keepAlive = head.keepAlive
         }
+        setmetatable(req.headers, headers)
 
         -- Catch errors
         local status, res = pcall(self._router.doRoute, self._router, req)
