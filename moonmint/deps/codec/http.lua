@@ -1,3 +1,4 @@
+-- ADD LUVIT LICENSE
 -- Modified from luvit/http-codec
 -- https://github.com/luvit/luvit/blob/master/deps/http-codec.lua
 

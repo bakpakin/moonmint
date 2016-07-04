@@ -2,15 +2,14 @@
 
 ## Goals
 * Make Travis builds pass
-* Webdav HTTP methods - also make sure to set the HTTP version for those.
 * AJAX style request agent with proper TLS support.
 * Add testing for server code - (requires agent for sending requests)
 * Add more testing in general
-* Better documentation, preferably LuaDoc like (source generated) or on the wiki. Add docs as we go.
-* Contributing guide
 * Cookie utilities
 * Etags, either only with static or as utility middleware (or both).
 * View engine that is integrated with built in templates, but can eventually use others like etlua. Partials support.
+* Better documentation, preferably LuaDoc like (source generated) or on the wiki. Add docs as we go.
+* Contributing guide
 * Add more general pattern support in routing.
 * Websockets - easy to integrate and of course coro-style
 * Get a logo!

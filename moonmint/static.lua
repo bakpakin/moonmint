@@ -55,6 +55,12 @@ end
 function Static:renderDirectory(req, go, path)
     local fs = self.fs
     local ri = self.renderIndex
+    if self.renderDir then
+        local buffer = {'<!DOCTYPE html><html><head></head><body><ul>'}
+        
+        buffer[#buffer + 1] = '</ul></body></html>'
+        return response(table.concat(buffer, '\n'), 200, 'text/html')
+    end
     if type(ri) == 'table' then
         for i = 1, #ri do
             local testIndex = pathJoin(path, ri[i])

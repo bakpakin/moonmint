@@ -118,7 +118,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         -- Write response
         write(res)
         local body = res.body
-        write(body and tostring(body))
+        write(body and tostring(body) or nil)
         write()
 
         -- Drop non-keepalive and unhandled requets
@@ -138,7 +138,7 @@ end
 function Server:bind(options)
     options = options or {}
     if not options.host then
-        options.host = "127.0.0.1"
+        options.host = '0.0.0.0'
     end
     if not options.port then
         options.port = uv.getuid() == 0 and
