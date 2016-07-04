@@ -75,29 +75,32 @@ local function encoder()
         elseif not (type(item) == "table") then
             error("expected a table but got a " .. type(item) .. " when encoding data")
         end
-        local head, chunkedEncoding
-        local version = item.version or 1.1
+        local head, chunkedEncoding, headers
+        local version = item.version or '1.1'
         if item.method then
             local path = item.path
             assert(path and #path > 0, "expected non-empty path")
-            head = { item.method .. ' ' .. item.path .. ' HTTP/' .. version .. '\r\n' }
+            head = { item.method .. ' ' .. item.path .. ' HTTP/' .. version }
         else
             local reason = item.reason or STATUS_CODES[item.code]
-            head = { 'HTTP/' .. version .. ' ' .. item.code .. ' ' .. reason .. '\r\n' }
+            head = { 'HTTP/' .. version .. ' ' .. item.code .. ' ' .. reason }
         end
-        for i = 1, #item do
-            local key, value = unpack(item[i])
-            local lowerKey = lower(key)
-            if lowerKey == "transfer-encoding" then
-                chunkedEncoding = lower(value) == "chunked"
+        headers = item.headers or (item[1] and item)
+        if headers then
+            for i = 1, #headers do
+                local key, value = unpack(headers[i])
+                local lowerKey = lower(key)
+                if lowerKey == "transfer-encoding" then
+                    chunkedEncoding = lower(value) == "chunked"
+                end
+                value = gsub(tostring(value), "[\r\n]+", " ")
+                head[#head + 1] = key .. ': ' .. tostring(value)
             end
-            value = gsub(tostring(value), "[\r\n]+", " ")
-            head[#head + 1] = key .. ': ' .. tostring(value) .. '\r\n'
         end
         head[#head + 1] = '\r\n'
 
         mode = chunkedEncoding and encodeChunked or encodeRaw
-        return concat(head)
+        return concat(head, '\r\n')
     end
 
     function encodeRaw(item)

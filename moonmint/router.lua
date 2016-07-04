@@ -118,41 +118,56 @@ local function addParams(req, params)
 end
 
 -- If a middleware calls go multiple times, restart the chain at that point.
-local function chain(middlewares, i, req, res, go)
+local function chain(middlewares, i, req, go)
     local mw = middlewares[i]
     if mw then
-        return mw(req, res, function()
-            return chain(middlewares, i + 1, req, res, go)
+        return mw(req, function()
+            return chain(middlewares, i + 1, req, go)
         end)
     elseif go then
         return go()
     end
 end
 
+-- Converts values besides functions to middleware
+local function toMiddleware(mw)
+    if type(mw) == 'string' then
+        return function ()
+            return {
+                body = mw,
+                code = 200
+            }
+        end
+    elseif type(mw) == 'number' then
+        return function()
+            return {
+                code = mw
+            }
+        end
+    elseif type(mw) == 'table' and
+        getmetatable(mw) and
+        not getmetatable(mw).__call then
+        -- A non callable table, as far as we can tell.
+        return function()
+            return mw
+        end
+    else
+        return mw
+    end
+end
+
 -- Collapse multiple middlewares into one.
 local function makeChain(...)
     if select('#', ...) < 2 then
-        local mw = ...
-        if type(mw) == 'string' then
-            local index = mw
-            mw = function (req, res)
-                return res:send(index)
-            end
-        end
-        return mw
+        return toMiddleware(...)
     else
         local middlewares = {...}
         -- Convert string middlewares to functions
         for i = 1, #middlewares do
-            local data = middlewares[i]
-            if type(data) == 'string' then
-                middlewares[i] = function (req, res)
-                    return res:send(data)
-                end
-            end
+            middlewares[i] = toMiddleware(middlewares[i])
         end
-        return function(req, res, go)
-            return chain(middlewares, 1, res, res, go)
+        return function(req, go)
+            return chain(middlewares, 1, res, go)
         end
     end
 end
@@ -164,7 +179,7 @@ local function subroute(self, path, ...)
 
     local middleware = makeChain(...)
 
-    return self:use(function(req, res, go)
+    return self:use(function(req, go)
         local oldPath = req.path
         local matches = { match(oldPath, pat) }
         if #matches == 0 then
@@ -194,7 +209,7 @@ local function subroute(self, path, ...)
             end
         end
         local goCalled = false
-        middleware(req, res, function()
+        middleware(req, function()
             goCalled = true
         end)
 
@@ -206,19 +221,13 @@ local function subroute(self, path, ...)
     end)
 end
 
---- Make this router use middleware. Returns the middleware.
+--- Make this router use middleware. Returns the router.
 function router:use(...)
     if type(...) == "string" then
         return subroute(self, ...)
     end
     for i = 1, select("#", ...) do
-        local mw = select(i, ...)
-        if type(mw) == 'string' then
-            local index = mw
-            mw = function(req, res)
-                return res:send(index)
-            end
-        end
+        local mw = toMiddleware(select(i, ...))
         self[#self + 1] = mw
     end
     return self
@@ -275,7 +284,7 @@ function router:route(options, ...)
     end
 
     local callback = makeChain(...)
-    return self:use(function(req, res, go)
+    return self:use(function(req, go)
         if checkMethod and not methodF(req.method) then return go() end
         if hostF and not hostF(req.host) then return go() end
         if routeF then
@@ -283,13 +292,13 @@ function router:route(options, ...)
             if not matches then return go() end
             addParams(req, matches)
         end
-        return callback(req, res, go)
+        return callback(req, go)
     end)
 end
 
---- Routes the request and response through the appropriate middlewares.
-function router:doRoute(req, res, go)
-    return chain(self, 1, req, res, go)
+--- Routes the request through the appropriate middlewares.
+function router:doRoute(req, go)
+    return chain(self, 1, req, go)
 end
 
 -- Helper to make aliases for different common routes.

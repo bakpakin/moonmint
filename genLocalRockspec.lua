@@ -29,9 +29,6 @@ build = {
         ["moonmint.router"] = "moonmint/router.lua",
         ["moonmint.template"] = "moonmint/template.lua",
         ["moonmint.fs"] = "moonmint/fs.lua",
-        ["moonmint.headers"] = "moonmint/headers.lua",
-        ["moonmint.request"] = "moonmint/request.lua",
-        ["moonmint.response"] = "src/response.lua",
 
         ["moonmint.deps.codec.http"] = "moonmint/deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "moonmint/deps/codec/tls.lua",

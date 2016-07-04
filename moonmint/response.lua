@@ -16,7 +16,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local headers_mt = require 'moonmint.headers'
 local mime = require('mimetypes').guess
 local fs = require 'moonmint.fs'
 local response_index = {}

@@ -22,8 +22,6 @@ local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
-local request = require 'moonmint.request'
-local response = require 'moonmint.response'
 
 local setmetatable = setmetatable
 local rawget = rawget
@@ -79,7 +77,7 @@ local function makeServer()
     }, Server_mt)
 end
 
-function Server:onConnect(binding, rawRead, rawWrite, socket)
+local function onConnect(self, binding, rawRead, rawWrite, socket)
     local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
     local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
     for head in read do
@@ -87,7 +85,7 @@ function Server:onConnect(binding, rawRead, rawWrite, socket)
         local url = head.path or ""
         local path, rawQuery = match(url, "^([^%?]*)[%?]?(.*)$")
 
-        local req = request {
+        local req = {
             app = self,
             socket = socket,
             method = head.method,
@@ -101,30 +99,38 @@ function Server:onConnect(binding, rawRead, rawWrite, socket)
             keepAlive = head.keepAlive
         }
 
-        local res = response {
-            app = self,
-            write = write,
-            updateDecoder = updateDecoder,
-            updateEncoder = updateEncoder,
-            socket = socket,
-            headers = {},
-            state = "pending"
-        }
-
-        -- Use middleware and catch errors.
-        -- Errors outside of this will not  be caught.
-        local status, err = pcall(self._router.doRoute, self._router, req, res)
+        -- Catch errors
+        local status, res = pcall(self._router.doRoute, self._router, req)
         if not status then
-            res.state = "error"
-            pcall(binding.errorHandler, err, req, res, self, binding)
-            return
+            status, res = pcall(binding.errorHandler, res, req, self, binding)
+            if not status then
+                return
+            end
         end
 
+        -- Check response
+        if type(res) ~= 'table' then
+            status, res = pcall(binding.errorHandler,
+                'expected table as response', req, self, binding)
+            if not status then
+                return
+            end
+        end
+
+        -- Write response
+        write {
+            code = res.code or 200,
+            headers = res.headers,
+            version = res.version or req.version
+        }
+
+        -- Write the body
+        write(tostring(res.body))
+        write()
+
         -- Drop non-keepalive and unhandled requets
-        if res.state == "pending" or
-            res.state == "error" or
-            (not (res.keepAlive and head.keepAlive)) then
-            break
+        if not (res.keepAlive and head.keepAlive) then
+            return
         end
 
         -- Handle upgrade requests
@@ -139,7 +145,7 @@ end
 function Server:bind(options)
     options = options or {}
     if not options.host then
-        options.host = "0.0.0.0"
+        options.host = "127.0.0.1"
     end
     if not options.port then
         options.port = uv.getuid() == 0 and
@@ -150,9 +156,12 @@ function Server:bind(options)
     return self
 end
 
-local function defaultErrorHandler(err, req, res, server, binding)
+local function defaultErrorHandler(err, req, server, binding)
     print('Internal Server Error:', err)
-    res:status(500):send('Internal Server Error')
+    return {
+        code = 500,
+        body = 'Internal Server Error'
+    }
 end
 
 function Server:start(options)
@@ -174,10 +183,10 @@ function Server:start(options)
                     key = assert(tls.key, "tls key required"),
                     cert = assert(tls.cert, "tls cert required"),
                 })
-                return self:onConnect(binding, newRead, newWrite, socket)
+                return onConnect(self, binding, newRead, newWrite, socket)
             end
         else
-            callback = function(...) return self:onConnect(binding, ...) end
+            callback = function(...) return onConnect(self, binding, ...) end
         end
 
         -- Set request error handler unless explicitely disabled

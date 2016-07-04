@@ -18,6 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local mime = require('mimetypes').guess
 local fs = require 'moonmint.fs'
+local util = require 'moonmint.util'
 local byte = string.byte
 local setmetatable = setmetatable
 local match = string.match
@@ -39,15 +40,18 @@ local Static_mt = {
     __index = Static
 }
 
-function Static:_notFound(req, res, go)
+function Static:_notFound(req, go)
     if self.fallthrough then
         return go()
     else
-        return res:send('Not Found', 404)
+        return {
+            body = 'Not Found',
+            code = 404
+        }
     end
 end
 
-function Static:doRoute(req, res, go)
+function Static:doRoute(req, go)
 
     if req.method ~= "GET" then return go() end
     local path = "." .. req.path
@@ -55,7 +59,7 @@ function Static:doRoute(req, res, go)
     local fs = self.fs
 
     local stat = fs.stat(path)
-    if not stat then return self:_notFound(req, res, go) end
+    if not stat then return self:_notFound(req, go) end
 
     if stat.type == "directory" then
         if self.renderIndex then
@@ -65,18 +69,23 @@ function Static:doRoute(req, res, go)
                 path = path .. "/index.html"
             end
             stat = fs.stat(path);
-            if not stat then return self:_notFound(req, res, go) end
+            if not stat then return self:_notFound(req, go) end
         else
-            return self:_notFound(req, res, go)
+            return self:_notFound(req, go)
         end
     end
 
-    -- Read file
     local body = fs.readFile(path)
-    if not body then return self:_notFound(req, res, go) end
+    if not body then return self:_notFound(req, go) end
     local mime = mime(path)
-    res.mime = mime
-    return res:send(body, 200)
+    return {
+        code = 200,
+        headers = setmetatable({
+            {'Content-Length', #body},
+            {'Content-Type', mime}
+        }, util.headersMeta),
+        body = body
+    }
 
 end
 

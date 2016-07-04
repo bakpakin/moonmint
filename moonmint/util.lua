@@ -27,10 +27,11 @@ local floor = math.floor
 local concat = table.concat
 local tostring = tostring
 local tonumber = tonumber
+local setmetatable = setmetatable
 
 local uv = require 'luv'
 
-local function bodyParser(req, res, go)
+local function bodyParser(req, go)
     local parts = {}
     local read = req.read
     for chunk in read do
@@ -52,29 +53,28 @@ local urlValidComponent = "[%w%-%.%_%~%:%/%?%#%[%]%@%!%$%&%'%(%)%*%+%,%;%=%]%*]*
 
 -- Initialize table for substituting characters in a url string that need to be converted to hex.
 local charHexCodes
-local reverseCharHexCodes
 do
-    local hexDigits = { [0] = "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" }
+    local hexDigits = '0123456789ABCDEF'
     local function getHexCode(c)
         local b = byte(c)
         local d1 = floor(b / 16)
-        return  "%" .. hexDigits[d1] .. hexDigits[b - 16 * d1]
+        return char(37,
+            hexDigits:byte(d1 + 1),
+            hexDigits:byte(b - 16 * d1 + 1))
     end
     charHexCodes = {}
-    reverseCharHexCodes = {}
     for i = 0, 255 do
         local c = char(i)
         if match(c, urlSpecials) then
             local hexCode = getHexCode(c)
             charHexCodes[c] = hexCode
-            reverseCharHexCodes[hexCode] = c
         end
     end
     charHexCodes[" "] = "+"
 end
 
 local function urlDecodeFilter(c)
-    return reverseCharHexCodes[upper(c)]
+    return char(tonumber(c:sub(2), 16))
 end
 
 -- Encodes a Lua string into a url-safe string component by escaping characters.
@@ -150,7 +150,7 @@ local function queryDecode(str)
     return ret
 end
 
-local function queryParser(req, res, go)
+local function queryParser(req, go)
     req.query = queryDecode(req.rawQuery or "")
     return go()
 end
@@ -217,11 +217,90 @@ local function htmlUnescape(str)
     return gsub(str, '&(#?x?)(%w+);', htmlUnescapeHelper)
 end
 
+local headersMeta = {
+    __index = function(self, key)
+        if type(key) ~= "string" then
+            return rawget(self, key)
+        end
+        key = lower(key)
+        for i = 1, #self do
+            local val = rawget(self, i)
+            if lower(val[1]) == key then
+                return val[2]
+            end
+        end
+    end,
+    __newindex = function(self, key, value)
+        if type(key) ~= "string" then
+            return rawset(self, key, value)
+        end
+        local wasset = false
+        key = lower(key)
+        for i = #self, 1, -1 do
+            local val = rawget(self, i)
+            if lower(val[1]) == key then
+                if wasset then
+                    local len = #self
+                    rawset(self, i, rawget(self, len))
+                    rawset(self, len, nil)
+                else
+                    wasset = true
+                    val[2] = value
+                end
+            end
+        end
+        if not wasset then
+            return rawset(self, #self + 1, {key, value})
+        end
+    end
+}
+
+-- For coercing responses into tables
+local toResponse = {
+    ['function'] = function(res, req)
+        return res(req)
+    end,
+    ['string'] = function(res)
+        return {
+            code = 200,
+            headers = setmetatable({
+                {'Content-Length', #res},
+                {'Content-Type', 'text/html'}
+            }, headersMeta),
+            body = res
+        }
+    end,
+    ['number'] = function(res)
+        return {
+            code = res,
+            headers = setmetatable({}, headersMeta)
+        }
+    end,
+    ['table'] = function (res)
+        return res
+    end
+}
+
+-- Coerce response into a table
+local function responsify(res, req)
+    local converter = toResponse[type(res)]
+    if converter then
+        return converter(res, req)
+    else
+        error 'expected table as response'
+    end
+end
+
+local function flexiResponse(req, go)
+    return responsify(go())
+end
+
 -- Simple logger
-local function logger(req, res, go)
+local function logger(req, go)
     local time = os.date()
-    go()
+    local res = responsify(go(), req)
     print(format("%s | %s | %s | %s", time, req.method, req.path, res.code))
+    return res
 end
 
 -- Generate a uuid v4
@@ -255,5 +334,8 @@ return {
     logger = logger,
     bodyParser = bodyParser,
     queryParser = queryParser,
+    responsify = responsify,
+    flexiResponse = flexiResponse,
+    headersMeta = headersMeta,
     uuidv4 = uuidv4
 }
