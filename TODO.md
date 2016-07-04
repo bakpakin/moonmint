@@ -2,12 +2,12 @@
 
 ## Goals
 * Make Travis builds pass
-* Add testing for server code
+* Webdav HTTP methods - also make sure to set the HTTP version for those.
+* AJAX style request agent with proper TLS support.
+* Add testing for server code - (requires agent for sending requests)
 * Add more testing in general
 * Better documentation, preferably LuaDoc like (source generated) or on the wiki. Add docs as we go.
-* Webdav HTTP methods - also make sure to set the HTTP version for those.
 * Contributing guide
-* AJAX style request agent with proper TLS support.
 * Cookie utilities
 * Etags, either only with static or as utility middleware (or both).
 * View engine that is integrated with built in templates, but can eventually use others like etlua. Partials support.
