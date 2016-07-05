@@ -16,11 +16,21 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+--- Various utility functions and middleware.
+-- @module moonmint.util
+-- @author Calvin Rose
+-- @copyright 2016
+
 local format = string.format
 local concat = table.concat
 local pcall = pcall
+local queryDecode = require('moonmint.url').queryDecode
 
-local function bodyParser(req, go)
+local util = {}
+
+--- A middleware for getting the body of an HTTP request.
+-- The body is a string placed in req.body.
+function util.bodyParser(req, go)
     local parts = {}
     local read = req.read
     for chunk in read do
@@ -34,8 +44,9 @@ local function bodyParser(req, go)
     return go()
 end
 
--- Simple logger
-local function logger(req, go)
+--- Simple logger middleware.
+-- Logs in the format 'time | method | path | return status'.
+function util.logger(req, go)
     local time = os.date()
     local res = go()
     local status = pcall(
@@ -51,7 +62,11 @@ local function logger(req, go)
     return res
 end
 
-return {
-    logger = logger,
-    bodyParser = bodyParser
-}
+--- A middleware for parsing queries on requests.
+-- Places the queries in req.query.
+function util.queryParser(req, go)
+    req.query = queryDecode(req.rawQuery or "")
+    return go()
+end
+
+return util

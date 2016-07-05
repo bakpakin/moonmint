@@ -16,6 +16,9 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+--- Routing and sub apps.
+-- @module moonmint.router
+
 local response = require 'moonmint.response'
 
 local byte = string.byte
@@ -206,7 +209,7 @@ local function subroute(self, path, ...)
     end)
 end
 
---- Make this router use middleware. Returns the router.
+-- Make this router use middleware. Returns the router.
 function router:use(...)
     if type(...) == "string" then
         return subroute(self, ...)
@@ -218,7 +221,7 @@ function router:use(...)
     return self
 end
 
---- Creates a new route for the router.
+-- Creates a new route for the router.
 function router:route(options, ...)
 
     -- Type checking
@@ -281,7 +284,7 @@ function router:route(options, ...)
     end)
 end
 
---- Routes the request through the appropriate middlewares.
+-- Routes the request through the appropriate middlewares.
 function router:doRoute(req, go)
     return chain(self, 1, req, go)
 end

@@ -45,3 +45,6 @@ luac.out
 
 # Local rockspec for testing
 moonmint-local-0.rockspec
+
+# Generated documentation
+docout

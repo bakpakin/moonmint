@@ -1,5 +1,7 @@
+--
 -- Modified from creationix/coro-tls
 -- https://github.com/creationix/luv-coro-tls
+--
 
 local openssl = require('openssl')
 local state, bit = pcall(require, 'bit')

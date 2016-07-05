@@ -16,9 +16,9 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local query = require 'moonmint.query'
+local url = require 'moonmint.url'
 local helper = require 'spec.helper'
-local testQuery = helper.encode(query.encode, query.decode, assert)
+local testQuery = helper.encode(url.queryEncode, url.queryDecode, assert)
 
 describe("Query encoding/decoding", function()
 

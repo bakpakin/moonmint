@@ -1,5 +1,7 @@
+--
 -- Modified from luvit/http-codec
 -- https://github.com/luvit/luvit/blob/master/deps/http-codec.lua
+--
 
 local sub = string.sub
 local gsub = string.gsub

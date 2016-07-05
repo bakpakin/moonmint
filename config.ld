@@ -1,0 +1,11 @@
+file = "moonmint"
+project = "moonmint"
+description = "A Web Framework for Lua"
+backtick_references = true
+format = "markdown"
+title = "moonmint Documentation"
+dir = "docout"
+style = "./doc/style/"
+one = true
+package = "moonmint"
+not_luadoc = true

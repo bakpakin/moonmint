@@ -16,12 +16,16 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
--- ADD LUVIT LIT LICENSE
-
 -- A filesystem abstraction on top of luv. Uses non-blocking coroutines
 -- when available, otherwise uses blocking calls.
 --
 -- Modified from https://github.com/luvit/lit/blob/master/deps/coro-fs.lua
+
+--- Abstractions around the libuv filesystem.
+-- @module moonmint.fs
+-- @author Calvin Rose
+-- @copyright 2016
+-- @license MIT
 
 local uv = require 'luv'
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
@@ -69,96 +73,112 @@ local function tryYield(context)
     end
 end
 
+--- Wrapper around uv.fs_mkdir
 function fs.mkdir(path, mode)
     local cb, context = makeCallback()
     uv.fs_mkdir(path, mode or 511, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_open
 function fs.open(path, flags, mode)
     local cb, context = makeCallback()
     uv.fs_open(path, flags or "r", mode or 428, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_unlink
 function fs.unlink(path)
     local cb, context = makeCallback()
     uv.fs_unlink(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_stat
 function fs.stat(path)
     local cb, context = makeCallback()
     uv.fs_stat(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_lstat
 function fs.lstat(path)
     local cb, context = makeCallback()
     uv.fs_lstat(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_fstat
 function fs.fstat(fd)
     local cb, context = makeCallback()
     uv.fs_fstat(fd, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_chmod
 function fs.chmod(path)
     local cb, context = makeCallback()
     uv.fs_chmod(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_fchmod
 function fs.fchmod(path)
     local cb, context = makeCallback()
     uv.fs_fchmod(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_read
 function fs.read(fd, length, offset)
     local cb, context = makeCallback()
     uv.fs_read(fd, length or 1024 * 48, offset or -1, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_write
 function fs.write(fd, data, offset)
     local cb, context = makeCallback()
     uv.fs_write(fd, data, offset or -1, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_close
 function fs.close(fd)
     local cb, context = makeCallback()
     uv.fs_close(fd, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_symlink
 function fs.symlink(target, path)
     local cb, context = makeCallback()
     uv.fs_symlink(target, path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_readlink
 function fs.readlink(path)
     local cb, context = makeCallback()
     uv.fs_readlink(path, cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_access
 function fs.access(path, flags)
     local cb, context = makeCallback()
     uv.fs_access(path, flags or '', cb)
     return tryYield(context)
 end
 
+--- Wrapper around uv.fs_rmdir
 function fs.rmdir(path)
     local cb, context = makeCallback()
     uv.fs_rmdir(path, cb)
     return tryYield(context)
 end
 
+--- Remove directories recursively like the UNIX command `rm -rf`.
 function fs.rmrf(path)
     local success, err = fs.rmdir(path)
     if success then
@@ -178,6 +198,10 @@ function fs.rmrf(path)
     return fs.rmdir(path)
 end
 
+--- Smart wrapper around uv.fs_scandir.
+-- @treturn function an iterator over file objects
+-- in a directory. Each file table has a `name` property
+-- and a `type` property.
 function fs.scandir(path)
     local cb, context = makeCallback()
     uv.fs_scandir(path, cb)
@@ -194,6 +218,7 @@ function fs.scandir(path)
     end
 end
 
+--- Reads a file into a string
 function fs.readFile(path)
     local fd, stat, data, err
     fd, err = fs.open(path)
@@ -206,6 +231,8 @@ function fs.readFile(path)
     return data, err
 end
 
+--- Writes a string to a file. Overwrites the file
+-- if it already exists.
 function fs.writeFile(path, data, mkdir)
     local fd, success, err
     fd, err = fs.open(path, "w")
@@ -221,6 +248,23 @@ function fs.writeFile(path, data, mkdir)
     return success, err
 end
 
+--- Append a string to a file.
+function fs.appendFile(path, data, mkdir)
+    local fd, success, err
+    fd, err = fs.open(path, "w+")
+    if err then
+        if mkdir and err:match("^ENOENT:") then
+            success, err = fs.mkdirp(pathJoin(path, ".."))
+            if success then return fs.appendFile(path, data) end
+        end
+        return nil, err
+    end
+    success, err = fs.write(fd, data)
+    uv.fs_close(fd, noop)
+    return success, err
+end
+
+--- Make directories recursively. Similar to the UNIX `mkdir -p`.
 function fs.mkdirp(path, mode)
     local success, err = fs.mkdir(path, mode)
     if success or err:match("^EEXIST") then
@@ -234,6 +278,7 @@ function fs.mkdirp(path, mode)
     return nil, err
 end
 
+--- Creates a clone of fs, but with a different base directory.
 function fs.chroot(base)
     local chroot = {
         base = base,
@@ -295,6 +340,12 @@ function fs.chroot(base)
     end
     function chroot.writeFile(path, data, mkdir)
         return fs.writeFile(resolve(path), data, mkdir)
+    end
+    function chroot.appendFile(path, data, mkdir)
+        return fs.appendFile(resolve(path), data, mkdir)
+    end
+    function chroot.chroot(newBase)
+        return fs.chroot(resolve(newBase))
     end
     return chroot
 end
