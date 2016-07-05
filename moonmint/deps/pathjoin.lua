@@ -1,4 +1,3 @@
--- ADD LUVIT LICENSE
 -- Modified from https://github.com/luvit/luvit/blob/master/deps/pathjoin.lua
 
 local getPrefix, splitPath, joinParts

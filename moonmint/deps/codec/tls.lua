@@ -1,5 +1,3 @@
--- ADD ORIGINAL LICENSE
-
 -- Modified from creationix/coro-tls
 -- https://github.com/creationix/luv-coro-tls
 
