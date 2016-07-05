@@ -11,12 +11,12 @@ env:
 before_install:
   - if [ $LUA = "luajit" ]; then
       sudo add-apt-repository ppa:mwild1/ppa -y && sudo apt-get update -y;
-      sudo apt-get install lua5.1;
-      sudo apt-get install liblua5.1-dev;
+      sudo apt-get install -y lua5.1;
+      sudo apt-get install -y liblua5.1-dev;
     fi
-  - sudo apt-get install $LUA
-  - sudo apt-get install $LUA_DEV
-  - sudo apt-get install cmake
+  - sudo apt-get install -y $LUA
+  - sudo apt-get install -y $LUA_DEV
+  - sudo apt-get install -y cmake
   - lua$LUA_SFX -v
   # Install a recent luarocks release
   - wget http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz
