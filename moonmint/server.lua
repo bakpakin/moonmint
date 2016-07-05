@@ -151,7 +151,7 @@ function Server:bind(options)
     return self
 end
 
-local function defaultErrorHandler(err, req, server, binding)
+local function defaultErrorHandler(err)
     print('Internal Server Error:', err)
     return {
         code = 500,

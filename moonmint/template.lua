@@ -155,7 +155,7 @@ local function primaryEscape(str)
         end
 
         -- Append the body of the brackets
-        local htmlEscape = true
+        local htmlEscaped = true
         local body = str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0))
         if btypename ~= 'literal' then
             body = trim(body)
@@ -166,7 +166,7 @@ local function primaryEscape(str)
         end
         buffer[#buffer + 1] = {
             type = btypename,
-            htmlEscape = htmlEscape,
+            htmlEscape = htmlEscaped,
             body = body
         }
 
@@ -201,20 +201,20 @@ return function(body)
     for i = 1, #ast do
         local part = ast[i]
         if type(part) == "string" then
-            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(part))
+            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(backslashEscape(part)))
         elseif part.type == "variables" then
             b[#b + 1] = ("a[#a+1]=%s[%s]\n")
                 :format(part.htmlEscape and 'e' or 'c', make_safe(part.body))
         elseif part.type == "lua" then
             b[#b + 1] = ("\n%s\n"):format(part.body)
         elseif part.type == "luaexpr" then
-            b[#b + 1] = ("a[#a+1]=%s\n"):format(part.body)
+            b[#b + 1] = ("a[#a+1]=(%s)\n"):format(part.body)
         elseif part.type == "literal" then
-            local body = part.body
+            local pbody = backslashEscape(part.body)
             if part.htmlEscape then
-                body = htmlEscape(tostring(body))
+                pbody = htmlEscape(pbody)
             end
-            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(body))
+            b[#b + 1] = ("a[#a+1]=%s\n"):format(make_safe(pbody))
         end
     end
 

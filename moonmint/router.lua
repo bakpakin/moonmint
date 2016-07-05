@@ -23,8 +23,6 @@ local match = string.match
 local gmatch = string.gmatch
 local gsub = string.gsub
 local sub = string.sub
-local find = string.find
-local format = string.format
 local concat = table.concat
 local setmetatable = setmetatable
 
@@ -32,7 +30,7 @@ local router_mt
 
 -- Calling router creates a new router
 local router = setmetatable({}, {
-    __call = function(self, options)
+    __call = function(_, options)
         options = options or {
             mergeParams = true
         }
@@ -158,7 +156,7 @@ local function makeChain(...)
             middlewares[i] = toMiddleware(middlewares[i])
         end
         return function(req, go)
-            return chain(middlewares, 1, res, go)
+            return chain(middlewares, 1, req, go)
         end
     end
 end

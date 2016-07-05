@@ -17,20 +17,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
 local mime = require('mimetypes').guess
-local headers = require 'moonmint.headers'
+local headersMeta = require 'moonmint.headers'
 local response = require 'moonmint.response'
 local pathJoin = require 'moonmint.deps.pathjoin'
 local fs = require 'moonmint.fs'
-local byte = string.byte
 local setmetatable = setmetatable
-local match = string.match
 
 local Static = {}
 local Static_mt = {
     __index = Static
 }
 
-function Static:_notFound(req, go)
+function Static:_notFound(_, go)
     if self.fallthrough then
         return go()
     else
@@ -41,31 +39,24 @@ end
 function Static:renderFile(req, go, path)
     local body = self.fs.readFile(path)
     if not body then return self:_notFound(req, go) end
-    local mime = mime(path)
+    local mimetype = mime(path)
     return {
         code = 200,
         headers = setmetatable({
             {'Content-Length', #body},
-            {'Content-Type', mime}
+            {'Content-Type', mimetype}
         }, headersMeta),
         body = body
     }
 end
 
 function Static:renderDirectory(req, go, path)
-    local fs = self.fs
     local ri = self.renderIndex
-    if self.renderDir then
-        local buffer = {'<!DOCTYPE html><html><head></head><body><ul>'}
-        
-        buffer[#buffer + 1] = '</ul></body></html>'
-        return response(table.concat(buffer, '\n'), 200, 'text/html')
-    end
     if type(ri) == 'table' then
         for i = 1, #ri do
             local testIndex = pathJoin(path, ri[i])
-            local stat = fs.stat(testIndex);
-            if stat and stat.type ~= directory then
+            local stat = self.fs.stat(testIndex);
+            if stat and stat.type ~= 'directory' then
                 return self:renderFile(req, go, testIndex)
             end
         end
@@ -78,8 +69,7 @@ end
 function Static:doRoute(req, go)
     if req.method ~= "GET" then return go() end
     local path = "." .. req.path
-    local fs = self.fs
-    local stat = fs.stat(path)
+    local stat = self.fs.stat(path)
     if not stat then
         return self:_notFound(req, go)
     end

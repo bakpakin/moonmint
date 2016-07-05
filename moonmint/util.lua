@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local format = string.format
 local concat = table.concat
-local response = require 'moonmint.response'
+local pcall = pcall
 
 local function bodyParser(req, go)
     local parts = {}
@@ -38,16 +38,20 @@ end
 local function logger(req, go)
     local time = os.date()
     local res = go()
-    print(format("%s | %s | %s | %s",
-        time,
-        req.method,
-        req.path,
-        res and (res.code or 200) or 'No Response'))
+    local status = pcall(
+        print,
+        format("%s | %s | %s | %s",
+            time,
+            req.method,
+            req.path,
+            res and (res.code or 200) or 'No Response'))
+    if not status then
+        print 'Could not log response.'
+    end
     return res
 end
 
 return {
     logger = logger,
-    bodyParser = bodyParser,
-    queryParser = queryParser
+    bodyParser = bodyParser
 }

@@ -21,15 +21,16 @@ local fs = require 'moonmint.fs'
 local headersMeta = require 'moonmint.headers'
 local setmetatable = setmetatable
 local tonumber = tonumber
+local type = type
 
 -- For coercing responses into tables
 local toResponse = {
-    ['string'] = function(res, code, mime)
+    ['string'] = function(res, code, mimetype)
         return {
             code = code and tonumber(code) or 200,
             headers = setmetatable({
                 {'Content-Length', #res},
-                {'Content-Type', mime or 'text/html'}
+                {'Content-Type', mimetype or 'text/html'}
             }, headersMeta),
             body = res
         }
@@ -57,7 +58,7 @@ local function responsify(...)
     end
 end
 
-local function normalizer(req, go)
+local function normalizer(_, go)
     return responsify(go())
 end
 
@@ -67,18 +68,18 @@ local function file(path)
     if not body then
         error(err)
     end
-    local mime = mime(path)
+    local mimetype = mime(path)
     return {
         code = 200,
         headers = setmetatable({
             {'Content-Length', #body},
-            {'Content-Type', mime}
+            {'Content-Type', mimetype}
         }, headersMeta),
         body = body
     }
 end
 
-function redirect(location, code)
+local function redirect(location, code)
     return {
         code = code or 302,
         headers = setmetatable({
@@ -93,7 +94,7 @@ return setmetatable({
     redirect = redirect,
     create = responsify
 }, {
-    __call = function(self, ...)
+    __call = function(_, ...)
         return responsify(...)
     end
 })

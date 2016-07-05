@@ -27,7 +27,6 @@ local uv = require 'luv'
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
 local fs = {}
-local cocreate = coroutine.create
 local coresume = coroutine.resume
 local corunning = coroutine.running
 local coyield = coroutine.yield
@@ -124,7 +123,7 @@ function fs.read(fd, length, offset)
     return tryYield(context)
 end
 
-function fs.write(fs, data, offset)
+function fs.write(fd, data, offset)
     local cb, context = makeCallback()
     uv.fs_write(fd, data, offset or -1, cb)
     return tryYield(context)
