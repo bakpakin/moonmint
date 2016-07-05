@@ -46,13 +46,8 @@ local function logger(req, go)
     return res
 end
 
-local function teapot()
-    return response(418)
-end
-
 return {
     logger = logger,
     bodyParser = bodyParser,
-    queryParser = queryParser,
-    teapot = teapot
+    queryParser = queryParser
 }
