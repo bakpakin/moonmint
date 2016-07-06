@@ -21,7 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local mime = require('mimetypes').guess
 local fs = require 'moonmint.fs'
-local headersMeta = require 'moonmint.headers'
+local headersMeta = require 'moonmint.deps.headers'
 local setmetatable = setmetatable
 local tonumber = tonumber
 local type = type

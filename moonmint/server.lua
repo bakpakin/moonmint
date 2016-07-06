@@ -25,7 +25,7 @@ local httpCodec = require 'moonmint.deps.codec.http'
 local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
-local headers = require 'moonmint.headers'
+local headers = require 'moonmint.deps.headers'
 
 local setmetatable = setmetatable
 local type = type
