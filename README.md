@@ -59,8 +59,8 @@ require('moonmint')()
 ```
 ## Credits
 
-A lot of code was modified from the [Luvit](https://luvit.io/) project and from [Tim Caswell](https://twitter.com/creationix), its creator.
-This project depends on the luv library, a Lua binding to libuv.
+A lot of code was modified from the [Luvit](https://luvit.io/) project and from [Tim Caswell](https://twitter.com/creationix), the main author.
+moonmint depends on the luv library, a Lua binding to libuv.
 
 Another important dependency is lua-openssl, which is a very useful openssl binding for Lua created and maintained
 by [George Zhao](https://github.com/zhaozg). Many thanks.
