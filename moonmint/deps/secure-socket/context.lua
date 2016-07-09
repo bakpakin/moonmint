@@ -18,19 +18,6 @@ limitations under the License.
 local openssl = require('openssl')
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
-local loadResource
-if type(module) == "table" then
-  function loadResource(path)
-    return module:load(path)
-  end
-else
-    local ok
-    ok, loadResource = pcall(require, 'resource')
-    if ok then
-        loadResource = loadResource.load
-    end
-end
-
 local bit
 do
     local status
@@ -44,15 +31,13 @@ local DEFAULT_CIPHERS = 'ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:' .. -- TLS 1
 local DEFAULT_CA_STORE
 do
 
-    if not loadResource then
-        function loadResource(path)
-            local callerPath = debug.getinfo(2, "S").source:sub(2)
-            local file = pathJoin(callerPath, '..', path)
-            local f = io.open(file, "rb")
-            local content = f:read("*all")
-            f:close()
-            return content
-        end
+    local function loadResource(path)
+        local callerPath = debug.getinfo(2, "S").source:sub(2)
+        local file = pathJoin(callerPath, '..', path)
+        local f = io.open(file, "rb")
+        local content = f:read("*all")
+        f:close()
+        return content
     end
 
     local data = assert(loadResource("./root_ca.dat"))
