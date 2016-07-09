@@ -32,9 +32,10 @@ build = {
         ["moonmint.fs"] = "moonmint/fs.lua",
         ["moonmint.url"] = "moonmint/url.lua",
         ["moonmint.html"] = "moonmint/html.lua",
-        ["moonmint.query"] = "moonmint/query.lua",
+        ["moonmint.agent"] = "moonmint/agent.lua",
 
         ["moonmint.deps.headers"] = "moonmint/deps/headers.lua",
+        ["moonmint.deps.coro-wrapper"] = "moonmint/deps/coro-wrapper.lua",
         ["moonmint.deps.codec.http"] = "moonmint/deps/codec/http.lua",
         ["moonmint.deps.codec.tls"] = "moonmint/deps/codec/tls.lua",
         ["moonmint.deps.pathjoin"] = "moonmint/deps/pathjoin.lua"

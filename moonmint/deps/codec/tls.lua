@@ -4,13 +4,13 @@
 --
 
 local openssl = require('openssl')
-local state, bit = pcall(require, 'bit')
-if not state then
-    bit = require 'bit32'
-end
+local bit = require 'bit32'
 
 local DEFAULT_CIPHERS = 'ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:' .. -- TLS 1.2
                         'RC4:HIGH:!MD5:!aNULL:!EDH'                     -- TLS 1.0
+
+-- Load Default root certificate authority store
+local DEFAULT_CA_STORE = nil
 
 -- TODO Use a provided root certificate authority
 
@@ -40,6 +40,10 @@ local function wrap(read, write, options)
         else
             error("options.ca must be string or table of strings")
         end
+    elseif options.ca == false then
+        ca = nil
+    else
+        ca = DEFAULT_CA_STORE
     end
     if key and cert then
         assert(ctx:use(key, cert))
@@ -119,5 +123,26 @@ local function wrap(read, write, options)
     return plainRead, plainWrite, ssl
 
 end
+
+-- local function readFile(file)
+--     local f = io.open(file, 'rb')
+--     local content = f:read('*all')
+--     f:close()
+--     return content
+-- end
+
+-- do
+--     local data = readFile('~/Desktop/root_ca.dat')
+--     DEFAULT_CA_STORE = openssl.x509.store:new()
+--     local index = 1
+--     local len = #data
+--     while index < len do
+--         local len1 = bit.bor(bit.lshift(data:byte(index), 8), data:byte(index + 1))
+--         index = index + 2
+--         local cert = assert(openssl.x509.read(data:sub(index, index + len1)))
+--         index = index + len1
+--         assert(DEFAULT_CA_STORE:add(cert))
+--     end
+-- end
 
 return wrap

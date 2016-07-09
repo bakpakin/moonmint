@@ -10,6 +10,8 @@ local find = string.find
 local format = string.format
 local concat = table.concat
 local match = string.match
+local byte = string.byte
+local tostring = tostring
 
 local STATUS_CODES = {
     [100] = 'Continue',
@@ -92,14 +94,14 @@ local function encoder()
         if headers then
             for i = 1, #headers do
                 local header = headers[i]
-                local key, value = headers[1], header[2]
-                local first = key:byte()
+                local key, value = tostring(headers[1]), tostring(header[2])
+                local first = byte(key)
                 -- Check if the first letter is T or t before lower
                 if (first == 116 or first == 84) and
                     lower(key) == "transfer-encoding" then
                     chunkedEncoding = lower(value) == "chunked"
                 end
-                head[#head + 1] = gsub(key .. ': ' .. tostring(value), '[\r\n]+', ' ')
+                head[#head + 1] = gsub(key .. ': ' .. value, '[\r\n]+', ' ')
             end
         end
         head[#head + 1] = '\r\n'

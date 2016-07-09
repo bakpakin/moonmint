@@ -26,43 +26,12 @@ local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 local headers = require 'moonmint.deps.headers'
+local coroWrap = require 'moonmint.deps.coro-wrapper'
 
 local setmetatable = setmetatable
 local type = type
 local pcall = pcall
 local match = string.match
-
--- Pull readWrap and writeWrap from coro-wrapper
-local function readWrap(read, decode)
-    local buffer = ""
-    return function ()
-        while true do
-            local item, extra = decode(buffer)
-            if item then
-                buffer = extra
-                return item
-            end
-            local chunk = read()
-            if not chunk then return end
-            buffer = buffer .. chunk
-        end
-    end,
-    function (newDecode)
-        decode = newDecode
-    end
-end
-
-local function writeWrap(write, encode)
-    return function (item)
-        if not item then
-            return write()
-        end
-        return write(encode(item))
-    end,
-    function (newEncode)
-        encode = newEncode
-    end
-end
 
 local Server = {}
 local Server_mt = {
@@ -77,8 +46,8 @@ local function makeServer()
 end
 
 local function onConnect(self, binding, rawRead, rawWrite, socket)
-    local read, updateDecoder = readWrap(rawRead, httpCodec.decoder())
-    local write, updateEncoder = writeWrap(rawWrite, httpCodec.encoder())
+    local read, updateDecoder = coroWrap.reader(rawRead, httpCodec.decoder())
+    local write, updateEncoder = coroWrap.writer(rawWrite, httpCodec.encoder())
     for head in read do
 
         local url = head.path or ""
