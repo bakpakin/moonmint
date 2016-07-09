@@ -21,6 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- @author Calvin Rose
 -- @copyright 2016
 
+local uv = require 'luv'
 local format = string.format
 local concat = table.concat
 local pcall = pcall
@@ -67,6 +68,26 @@ end
 function util.queryParser(req, go)
     req.query = queryDecode(req.rawQuery or "")
     return go()
+end
+
+function util.corosync(fn)
+    local unpack = unpack or table.unpack
+    local crunning = coroutine.running
+    local cwrap = coroutine.wrap
+    local run = uv.run
+    local loop_alive = uv.loop_alive
+    return function(...)
+        if crunning() and loop_alive() then
+            return fn(...)
+        else
+            local ret
+            cwrap(function(...)
+                ret = {fn(...)}
+            end)(...)
+            run()
+            return unpack(ret)
+        end
+    end
 end
 
 return util

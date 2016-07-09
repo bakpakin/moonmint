@@ -20,7 +20,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- @module moonmint.static
 
 local mime = require('mimetypes').guess
-local headersMeta = require 'moonmint.deps.headers'
+local newHeaders = require 'moonmint.deps.http-headers'.newHeaders
 local response = require 'moonmint.response'
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 local fs = require 'moonmint.fs'
@@ -45,10 +45,10 @@ function Static:renderFile(req, go, path)
     local mimetype = mime(path)
     return {
         code = 200,
-        headers = setmetatable({
+        headers = newHeaders {
             {'Content-Length', #body},
             {'Content-Type', mimetype}
-        }, headersMeta),
+        },
         body = body
     }
 end

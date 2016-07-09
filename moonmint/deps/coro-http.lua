@@ -12,7 +12,7 @@ license = "MIT"
 author = { name = "Tim Caswell" }
 ]]
 
-local httpCodec = require 'moonmint.deps.codec.http'
+local httpCodec = require 'moonmint.deps.httpCodec'
 local net = require 'moonmint.deps.coro-net'
 
 local connections = {}

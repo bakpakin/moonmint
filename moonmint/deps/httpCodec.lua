@@ -115,9 +115,8 @@ local function encoder()
       local reason = item.reason or STATUS_CODES[item.code]
       head = { 'HTTP/' .. version .. ' ' .. item.code .. ' ' .. reason .. '\r\n' }
     end
-    local headers = item[1] and item or item.headers
-    for i = 1, #headers do
-      local key, value = unpack(headers[i])
+    for i = 1, #item do
+      local key, value = unpack(item[i])
       local lowerKey = lower(key)
       if lowerKey == "transfer-encoding" then
         chunkedEncoding = lower(value) == "chunked"

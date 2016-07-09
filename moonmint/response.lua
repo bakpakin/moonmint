@@ -21,7 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local mime = require('mimetypes').guess
 local fs = require 'moonmint.fs'
-local headersMeta = require 'moonmint.deps.headers'
+local headers = require 'moonmint.deps.http-headers'
 local setmetatable = setmetatable
 local tonumber = tonumber
 local type = type
@@ -31,22 +31,21 @@ local toResponse = {
     ['string'] = function(res, code, mimetype)
         return {
             code = code and tonumber(code) or 200,
-            headers = setmetatable({
+            headers = headers.newHeaders {
                 {'Content-Length', #res},
                 {'Content-Type', mimetype or 'text/html'}
-            }, headersMeta),
+            },
             body = res
         }
     end,
     ['number'] = function(res)
         return {
             code = res,
-            headers = setmetatable({}, headersMeta)
+            headers = headers.newHeaders()
         }
     end,
     ['table'] = function (res)
-        res.headers = res.headers or {}
-        setmetatable(res.headers, headersMeta)
+        res.headers = headers.newHeaders(res.headers)
         return res
     end
 }
@@ -74,10 +73,10 @@ local function file(path)
     local mimetype = mime(path)
     return {
         code = 200,
-        headers = setmetatable({
+        headers = headers.newHeaders{
             {'Content-Length', #body},
             {'Content-Type', mimetype}
-        }, headersMeta),
+        },
         body = body
     }
 end
@@ -85,9 +84,9 @@ end
 local function redirect(location, code)
     return {
         code = code or 302,
-        headers = setmetatable({
-            {'Location', location},
-        }, headersMeta)
+        headers = headers.newHeaders {
+            {'Location', location}
+        }
     }
 end
 

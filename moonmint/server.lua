@@ -21,10 +21,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local uv = require 'luv'
 local createServer = require('moonmint.deps.coro-net').createServer
-local httpCodec = require 'moonmint.deps.codec.http'
+local httpCodec = require 'moonmint.deps.httpCodec'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
-local headers = require 'moonmint.deps.headers'
+local httpHeaders = require 'moonmint.deps.http-headers'
+local newHeaders = httpHeaders.newHeaders
 local response = require 'moonmint.response'
 local coroWrap = require 'moonmint.deps.coro-wrapper'
 
@@ -43,6 +44,37 @@ local function makeServer()
         bindings = {},
         _router = router()
     }, Server_mt)
+end
+
+local function makeResponseHead(res)
+    local head = {
+        code = res.code or 200
+    }
+    local contentLength
+    local chunked
+    local headers = res.headers
+    if headers then
+        for i = 1, #headers do
+            local header = headers[i]
+            local key, value = tostring(header[1]), tostring(header[2])
+            key = key:lower()
+            if key == "content-length" then
+                contentLength = value
+            elseif key == "content-encoding" and value:lower() == "chunked" then
+                chunked = true
+            end
+            head[#head + 1] = headers[i]
+        end
+    end
+
+    local body = res.body
+    if type(body) == "string" then
+        if not chunked and not contentLength then
+            head[#head + 1] = {"Content-Length", #body}
+        end
+    end
+
+    return head
 end
 
 local function onConnect(self, binding, rawRead, rawWrite, socket)
@@ -66,11 +98,10 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             originalPath = path,
             rawQuery = rawQuery,
             read = read,
-            headers = head,
+            headers = newHeaders(head),
             version = head.version,
             keepAlive = head.keepAlive
         }
-        setmetatable(req.headers, headers)
 
         -- Catch errors
         local status, res = pcall(self._router.doRoute, self._router, req)
@@ -94,10 +125,13 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
                     break
                 end
             end
+            if not res or type(res) ~= 'table' then
+                break
+            end
         end
 
         -- Write response
-        write(res)
+        write(makeResponseHead(res))
         local body = res.body
         write(body and tostring(body) or nil)
         write()
@@ -119,7 +153,7 @@ end
 function Server:bind(options)
     options = options or {}
     if not options.host then
-        options.host = '0.0.0.0'
+        options.host = '127.0.0.1'
     end
     if not options.port then
         options.port = uv.getuid() == 0 and
