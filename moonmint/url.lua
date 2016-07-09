@@ -86,8 +86,8 @@ end
 
 -- Encode a Lua object as query string in a URL. The returned query string can be appended
 -- to a url by append a '?' character as well as the query string to the original url.
-local queryValidKeyTypes = { string = true, number = true }
-local queryValidValueTypes = { string = true, number = true, table = true, boolean = true }
+local queryValidKeyTypes = { string = true, number = true, boolean = true }
+local queryValidValueTypes = { string = true, number = true, boolean = true }
 local function queryEncode(object)
     local t = {}
     local len = 0
@@ -101,8 +101,6 @@ local function queryEncode(object)
         local vtype = type(v)
         if not queryValidValueTypes[vtype] then
             error("Invalid query value type '" .. vtype .. "'.")
-        elseif vtype == "table" then
-            vstr = queryEncode(v)
         else
             vstr = tostring(v)
         end
@@ -128,8 +126,6 @@ local function queryDecode(str)
         ret = ret or {}
         local keyDecoded = urlDecode(key)
         local valueDecoded = urlDecode(value)
-        local valueQueryDecoded = queryDecode(valueDecoded)
-        if valueQueryDecoded then valueDecoded = valueQueryDecoded end
 
         -- Attempt number conversion
         valueDecoded = tonumber(valueDecoded) or valueDecoded
@@ -140,9 +136,38 @@ local function queryDecode(str)
     return ret
 end
 
+local defaultOptions = {}
+local function urlParse(url, options)
+    options = options or defaultOptions
+    local protocol, host, port, path, rawQuery =
+        match(url, '^(https?)://([^/:]+):?([0-9]*)(/?[^/?]*)/??(.*)$')
+    if not protocol then
+        error("Not a valid http url: " .. url)
+    end
+    local tls = protocol == "https"
+    if port == '' then
+        port = nil
+    end
+    port = port and tonumber(port) or (tls and 443 or 80)
+    if path == "" then
+        path = "/"
+    end
+    local query = nil
+    if not options.skipQuery then
+        query = queryDecode(rawQuery)
+    end
+    return {
+        tls = tls,
+        host = host,
+        port = port,
+        path = path,
+        query = query
+    }
+end
 return {
     encode = urlEncode,
     decode = urlDecode,
+    parse = urlParse,
     queryEncode = queryEncode,
     queryDecode = queryDecode,
     valid = valid

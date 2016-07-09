@@ -21,7 +21,7 @@ local rawset = rawset
 local rawget = rawget
 local type = type
 
-return {
+local meta = {
     __index = function(self, key)
         if type(key) ~= "string" then
             return rawget(self, key)
@@ -58,3 +58,5 @@ return {
         end
     end
 }
+
+return meta

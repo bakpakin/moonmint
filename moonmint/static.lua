@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local mime = require('mimetypes').guess
 local headersMeta = require 'moonmint.deps.headers'
 local response = require 'moonmint.response'
-local pathJoin = require 'moonmint.deps.pathjoin'
+local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 local fs = require 'moonmint.fs'
 local setmetatable = setmetatable
 

@@ -20,12 +20,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- @module moonmint.server
 
 local uv = require 'luv'
-local createServer = require('luv-coro-net').createServer
+local createServer = require('moonmint.deps.coro-net').createServer
 local httpCodec = require 'moonmint.deps.codec.http'
-local tlsWrap = require 'moonmint.deps.codec.tls'
 local router = require 'moonmint.router'
 local static = require 'moonmint.static'
 local headers = require 'moonmint.deps.headers'
+local response = require 'moonmint.response'
 local coroWrap = require 'moonmint.deps.coro-wrapper'
 
 local setmetatable = setmetatable
@@ -50,6 +50,10 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
     local write, updateEncoder = coroWrap.writer(rawWrite, httpCodec.encoder())
     for head in read do
 
+        if type(head) ~= 'table' then
+            break
+        end
+
         local url = head.path or ""
         local path, rawQuery = match(url, "^([^%?]*)[%?]?(.*)$")
 
@@ -73,19 +77,22 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         if not status then
             status, res = pcall(binding.errorHandler, res, req, self, binding)
             if not status then
-                return
+                break
             end
         end
 
         -- Check response
         if not res then
-            return
+            break
         end
         if type(res) ~= 'table' then
-            status, res = pcall(binding.errorHandler,
-                'expected table as response', req, self, binding)
+            status, res = pcall(response, res)
             if not status then
-                return
+                status, res = pcall(binding.errorHandler,
+                'expected table as response', req, self, binding)
+                if not status then
+                    break
+                end
             end
         end
 
@@ -97,13 +104,13 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
 
         -- Drop non-keepalive and unhandled requets
         if not (res.keepAlive and head.keepAlive) then
-            return
+            break
         end
 
         -- Handle upgrade requests
         if res.upgrade then
             pcall(res.upgrade, read, write, updateDecoder, updateEncoder, socket)
-            return
+            break
         end
 
     end
@@ -141,20 +148,20 @@ function Server:start(options)
     end
     for i = 1, #bindings do
         local binding = bindings[i]
+        local newBinding = {
+            host = binding.host,
+            port = binding.port,
+            onStart = binding.onStart
+        }
         local tls = binding.tls or options.tls
-        local callback
         if tls then
-            callback = function(rawRead, rawWrite, socket)
-                local newRead, newWrite = tlsWrap(rawRead, rawWrite, {
-                    server = true,
-                    key = assert(tls.key, "tls key required"),
-                    cert = assert(tls.cert, "tls cert required"),
-                })
-                return onConnect(self, binding, newRead, newWrite, socket)
-            end
-        else
-            callback = function(...) return onConnect(self, binding, ...) end
+            newBinding.tls = {
+                key = tls.key,
+                cert = tls.cert,
+                server = true
+            }
         end
+        local callback = function(...) return onConnect(self, newBinding, ...) end
 
         -- Set request error handler unless explicitely disabled
         if binding.errorHandler ~= false then
