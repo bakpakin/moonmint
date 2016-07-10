@@ -11,6 +11,7 @@ Check out the [wiki](https://github.com/bakpakin/moonmint/wiki) for more informa
 ## Features
 
 * Simple and flexible express-like routing
+* Powerful agent for making HTTP requests
 * Middleware
 * Static file server
 * Asynchronous operation

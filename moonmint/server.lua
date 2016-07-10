@@ -41,6 +41,7 @@ local Server_mt = {
 local function makeServer()
     return setmetatable({
         bindings = {},
+        netServers = {},
         _router = router()
     }, Server_mt)
 end
@@ -105,12 +106,14 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         if not status then
             status, res = pcall(binding.errorHandler, res, req, self, binding)
             if not status then
+                socket:close()
                 break
             end
         end
 
         -- Check response
         if not res then
+            socket:close()
             break
         end
         if type(res) ~= 'table' then
@@ -161,6 +164,14 @@ function Server:bind(options)
     return self
 end
 
+function Server:close()
+    local netServers = self.netServers
+    for i = 1, #netServers do
+        local s = netServers[i]
+        s:close()
+    end
+end
+
 local function defaultErrorHandler(err)
     print('Internal Server Error:', err)
     return {
@@ -204,7 +215,7 @@ function Server:start(options)
         end
 
         -- Create server with coro-net
-        createServer(binding, callback)
+        table.insert(self.netServers, createServer(binding, callback))
         local onStart = binding.onStart or options.onStart
         if onStart then
             onStart(self, binding)

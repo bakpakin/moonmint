@@ -4,6 +4,10 @@ local app = moonmint()
 
 app:use(util.logger)
 
+app:get('/shutdown', function()
+    -- app:close()
+end)
+
 app:use('/', moonmint.static {
     fallthrough = false,
     renderIndex = function(_, _, iter)

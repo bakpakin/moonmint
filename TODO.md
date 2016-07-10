@@ -1,7 +1,6 @@
 # TODO
 
 ## Goals
-* AJAX style request agent with proper TLS support.
 * Add testing for server code - (requires agent for sending requests)
 * Add more testing in general
 * Cookie utilities
