@@ -55,7 +55,8 @@ end
 
 function Static:renderDirectory(req, go, path)
     local ri = self.renderIndex
-    if type(ri) == 'table' then
+    local rit = type(ri)
+    if rit == 'table' then
         for i = 1, #ri do
             local testIndex = pathJoin(path, ri[i])
             local stat = self.fs.stat(testIndex);
@@ -64,6 +65,9 @@ function Static:renderDirectory(req, go, path)
             end
         end
         return self:_notFound(req, go)
+    elseif rit == 'function' then
+        local iter = self.fs.scandir(path)
+        return ri(self, path, iter, req, go)
     else
         return self:renderFile(req, go, pathJoin(path, ri))
     end

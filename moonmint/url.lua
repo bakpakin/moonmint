@@ -34,9 +34,10 @@ local format = string.format
 local function urlEncode(str)
     if str then
         str = gsub(str, '\n', '\r\n')
-        str = gsub(str, '%W', function (c)
+        str = gsub(str, '[^%w ]', function (c)
             return format('%%%02X', byte(c))
         end)
+        str = gsub(str, ' ', '%+')
     end
     return str
 end

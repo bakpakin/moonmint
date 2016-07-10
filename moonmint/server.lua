@@ -23,9 +23,8 @@ local uv = require 'luv'
 local createServer = require('moonmint.deps.coro-net').createServer
 local httpCodec = require 'moonmint.deps.httpCodec'
 local router = require 'moonmint.router'
-local static = require 'moonmint.static'
 local httpHeaders = require 'moonmint.deps.http-headers'
-local newHeaders = httpHeaders.newHeaders
+local getHeaders = httpHeaders.getHeaders
 local response = require 'moonmint.response'
 local coroWrap = require 'moonmint.deps.coro-wrapper'
 
@@ -66,14 +65,12 @@ local function makeResponseHead(res)
             head[#head + 1] = headers[i]
         end
     end
-
     local body = res.body
     if type(body) == "string" then
         if not chunked and not contentLength then
             head[#head + 1] = {"Content-Length", #body}
         end
     end
-
     return head
 end
 
@@ -98,7 +95,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             originalPath = path,
             rawQuery = rawQuery,
             read = read,
-            headers = newHeaders(head),
+            headers = getHeaders(head),
             version = head.version,
             keepAlive = head.keepAlive
         }
@@ -216,14 +213,6 @@ function Server:start(options)
     if not options.noUVRun then
         return uv.run()
     end
-end
-
-function Server:static(urlpath, realpath)
-    realpath = realpath or urlpath
-    self:use(urlpath, static({
-        base = realpath
-    }))
-    return self
 end
 
 -- Duplicate router functions for the server, so routes and middleware can be placed

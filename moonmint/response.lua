@@ -73,7 +73,7 @@ local function file(path)
     local mimetype = mime(path)
     return {
         code = 200,
-        headers = headers.newHeaders{
+        headers = headers.newHeaders {
             {'Content-Length', #body},
             {'Content-Type', mimetype}
         },

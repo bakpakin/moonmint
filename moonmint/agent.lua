@@ -126,7 +126,7 @@ local function requestImpl(self, tls, hostname, port, head, body)
         if connection.reused then
             return requestImpl(self, tls, hostname, port, head, body)
         end
-        error("Connection closed")
+        error("connection closed")
     end
 
     body = {}
@@ -153,7 +153,7 @@ local function requestImpl(self, tls, hostname, port, head, body)
     end
 
     -- Follow redirects
-    if not self.noFollow and
+    if not self.config.noFollow and
         head.method == "GET" and
         (res.code == 302 or res.code == 307) then
         for i = 1, #res do
@@ -172,7 +172,6 @@ local function sendImpl(self, body)
     body = body or self.body
     local uri = self.url
     local proto, hostname, path = match(uri, '^([a-z]*).-([%w%.%-]+)(.*)$')
-    print(proto, hostname, path)
 
     -- Make path
     if self.path then
@@ -186,7 +185,6 @@ local function sendImpl(self, body)
     if rawQuery ~= '' then
         path = path .. (alreadyHasQuery and '&' or '?') .. rawQuery
     end
-    print(path)
 
     -- Get port, host, and protocol
     local tls = proto == 'https'
@@ -210,56 +208,18 @@ local function sendImpl(self, body)
 end
 
 local request = {}
-local request_mt = {
-    __index = request,
-}
 
-local function makeRequest(parent)
-    local params = {}
-    if parent then
-        for k, v in pairs(parent.params) do
-            params[k] = v
-        end
-    end
-    return setmetatable({
-        parent = parent or request,
-        params = params
-    }, request_mt)
+function request:conf(key, value)
+    self.config[key] = value
+    return self
 end
 
-function request_mt:__call(options, body)
+function request:send(options, body)
     if type(options) == 'table' then
-        return self:options(options):send(body)
+        self = self:options(options)
     else
-        return self:send(options)
+        body = options
     end
-end
-
-function request_mt:__index(key)
-    local value = rawget(self, key)
-    if rawget(self, 'isBlueprint') then
-        if value ~= nil then
-            return value
-        end
-        local parent = rawget(self, 'parent')
-        value = parent[key]
-        if value and type(value) == 'function' then
-            local function method(self1, ...)
-                local newRequest = makeRequest(self1)
-                return value(newRequest, ...)
-            end
-            self[key] = method
-            return method
-        end
-    else
-        if value == nil then
-            return rawget(self, 'parent')[key]
-        end
-    end
-    return value
-end
-
-function request:send(body)
     local thread = crunning()
     if thread and uv.loop_alive() then
         return sendImpl(self, body)
@@ -282,16 +242,12 @@ function request:options(options)
     self.headers = httpHeaders.combineHeaders(self.headers,
         httpHeaders.newHeaders(options.headers))
     self.method = options.method or self.method
+    self.noFollow = options.noFollow or self.noFollow
     if options.params then
         for k, v in pairs(options.params) do
             self.params[k] = v
         end
     end
-    return self
-end
-
-function request:blueprint()
-    self.isBlueprint = true
     return self
 end
 
@@ -335,4 +291,42 @@ function request:post(uri)
     return self:uri(uri)
 end
 
-return makeRequest():blueprint()
+local function makeRequest(parent, index)
+    local params = {}
+    if parent and parent.params then
+        for k, v in pairs(parent.params) do
+            params[k] = v
+        end
+    end
+    return setmetatable({
+        params = params,
+        config = setmetatable({}, {
+            __index = parent.config
+        })
+    }, {
+        __index = index or parent,
+        __call = request.send
+    })
+end
+
+function request:blueprint()
+    local function index(self1, key)
+        local value = rawget(self1, key)
+        if value ~= nil then
+            return value
+        end
+        value = self[key]
+        if type(value) == 'function' then
+            local function method(self2, ...)
+                local new = makeRequest(self2)
+                return new[key](new, ...)
+            end
+            self[key] = method
+            return method
+        end
+        return value
+    end
+    return makeRequest(self, index)
+end
+
+return makeRequest(request):blueprint()

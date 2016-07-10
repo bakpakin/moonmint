@@ -5,18 +5,15 @@ local app = moonmint()
 app:use(util.logger)
 
 app:use('/', moonmint.static {
-    fallthrough = false
+    fallthrough = false,
+    renderIndex = function(_, _, iter)
+        local buffer = {'<!DOCTYPE html><html><head></head><body><ul>'}
+        for item in iter do
+            buffer[#buffer + 1] = ('<li>%s - %s</li>'):format(item.name, item.type)
+        end
+        buffer[#buffer + 1] = '</ul></body></html>'
+        return moonmint.response(table.concat(buffer))
+    end
 })
-
-local google = moonmint.agent
-    :get('https://www.google.com/search')
-    :blueprint()
-
-function google:search(query)
-    return self:param('q', query):param('oq', query)()
-end
-
-local res = google:search('hello')
-print (res.body)
 
 app:start()
