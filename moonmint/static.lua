@@ -19,6 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --- Middleware for serving static files.
 -- @module moonmint.static
 
+local uv = require 'luv'
 local mime = require('mimetypes').guess
 local newHeaders = require 'moonmint.deps.http-headers'.newHeaders
 local response = require 'moonmint.response'
@@ -75,7 +76,10 @@ end
 
 function Static:doRoute(req, go)
     if req.method ~= "GET" then return go() end
-    local path = pathJoin(".", req.path)
+    local path = req.path
+    if path:byte() == 47 then
+        path = '.' .. path
+    end
     local stat = self.fs.stat(path)
     if not stat then
         return self:_notFound(req, go)
@@ -101,6 +105,9 @@ return function(options)
     end
     options = options or {}
     local base = options.base or '.'
+    if not options.absolute then
+        base = pathJoin(uv.cwd(), base)
+    end
     local fallthrough = true
     if options.fallthrough ~= nil then
         fallthrough = options.fallthrough
