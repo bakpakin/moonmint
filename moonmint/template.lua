@@ -114,7 +114,6 @@ local function primaryEscape(str)
     local index = 1
     local trim_whitespace = false
     while true do
-        ::looptop::
 
         -- Skip to an open bracket
         local j = skipToBracket(str, index)
@@ -140,40 +139,40 @@ local function primaryEscape(str)
         -- Check for non escape
         if not btypename then
             trim_whitespace = false
-            goto looptop
-        end
-        index = nextindex
+        else
+            index = nextindex
 
-        -- Skip to the next closing bracket of the same type.
-        j = index
-        while byte(str, j) ~= 125 do
-            trim_whitespace = false
-            j = skipToCharWithEscapes(str, j, btypeCloser)
-            if j == 0 then return nil, "Unexpected end of template." end
-            j = j + 1
-            if byte(str, j) == 45 then
+            -- Skip to the next closing bracket of the same type.
+            j = index
+            while byte(str, j) ~= 125 do
+                trim_whitespace = false
+                j = skipToCharWithEscapes(str, j, btypeCloser)
+                if j == 0 then return nil, "Unexpected end of template." end
                 j = j + 1
-                trim_whitespace = true
+                if byte(str, j) == 45 then
+                    j = j + 1
+                    trim_whitespace = true
+                end
             end
-        end
 
-        -- Append the body of the brackets
-        local htmlEscaped = true
-        local body = str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0))
-        if btypename ~= 'literal' then
-            body = trim(body)
-            if body:byte() == 38 then
-                htmlEscape = false
-                body = body:sub(2, -1)
+            -- Append the body of the brackets
+            local htmlEscaped = true
+            local body = str:sub(index + 1, j - 2 - (trim_whitespace and 1 or 0))
+            if btypename ~= 'literal' then
+                body = trim(body)
+                if body:byte() == 38 then
+                    htmlEscape = false
+                    body = body:sub(2, -1)
+                end
             end
-        end
-        buffer[#buffer + 1] = {
-            type = btypename,
-            htmlEscape = htmlEscaped,
-            body = body
-        }
+            buffer[#buffer + 1] = {
+                type = btypename,
+                htmlEscape = htmlEscaped,
+                body = body
+            }
 
-        index = j + 1
+            index = j + 1
+        end
     end
     return buffer
 end

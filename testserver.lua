@@ -4,11 +4,8 @@ local app = moonmint()
 
 app:use(util.logger)
 
-app:get('/shutdown', function()
-    -- app:close()
-end)
-
 app:use('/', moonmint.static {
+    base = arg[0],
     fallthrough = false,
     renderIndex = function(_, _, iter)
         local buffer = {'<!DOCTYPE html><html><head></head><body><ul>'}
@@ -19,5 +16,7 @@ app:use('/', moonmint.static {
         return moonmint.response(table.concat(buffer))
     end
 })
+
+print(arg[0])
 
 app:start()

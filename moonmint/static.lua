@@ -75,7 +75,7 @@ end
 
 function Static:doRoute(req, go)
     if req.method ~= "GET" then return go() end
-    local path = "." .. req.path
+    local path = pathJoin(".", req.path)
     local stat = self.fs.stat(path)
     if not stat then
         return self:_notFound(req, go)
