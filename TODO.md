@@ -3,11 +3,13 @@
 ## Goals
 * Add testing for server code - (requires agent for sending requests)
 * Add more testing in general
+* Remove some luvit and lit libraries depenencies (httpCodec, coro-net, maybe secure socket.)
 * Cookie utilities
 * Etags, either only with static or as utility middleware (or both).
 * View engine that is integrated with built in templates, but can eventually use others like etlua. Partials support.
 * Better documentation, preferably LuaDoc like (source generated) or on the wiki. Add docs as we go.
 * Contributing guide
+* Convert HTTP parser over to http\_parser, a C library.
 * Add more general pattern support in routing.
 * Websockets - easy to integrate and of course coro-style
 * Get a logo!
