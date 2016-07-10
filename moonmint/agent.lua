@@ -291,6 +291,32 @@ function request:post(uri)
     return self:uri(uri)
 end
 
+-- Just some useful shortcuts
+-- TODO Add more
+local acceptMappings = {
+    json = 'application/json',
+    text = 'text/*',
+    html = 'text/html',
+    js = 'text/javascript',
+    xml = 'text/xml',
+    css = 'text/css',
+    all = '*/*'
+}
+
+function request:accept(...)
+    local currentlyAccepts = self.headers.Accept or ''
+    if not match(currentlyAccepts, ';%s*$') then
+        currentlyAccepts = currentlyAccepts .. '; '
+    end
+    local toAccept = {}
+    for i = 1, select('#', ...) do
+        local tp = select(i, ...)
+        toAccept[#toAccept + 1] = acceptMappings[tp] or tp
+    end
+    self.headers.Accept = currentlyAccepts .. table.concat(toAccept, '; ')
+    return self
+end
+
 local function makeRequest(parent, index)
     local params = {}
     if parent and parent.params then
