@@ -36,7 +36,6 @@ build = {
         ["moonmint.deps.coro-wrapper"] = "moonmint/deps/coro-wrapper.lua",
         ["moonmint.deps.coro-channel"] = "moonmint/deps/coro-channel.lua",
         ["moonmint.deps.coro-net"] = "moonmint/deps/coro-net.lua",
-        ["moonmint.deps.coro-http"] = "moonmint/deps/coro-http.lua",
         ["moonmint.deps.httpCodec"] = "moonmint/deps/httpCodec.lua",
         ["moonmint.deps.secure-socket.biowrap"] = "moonmint/deps/secure-socket/biowrap.lua",
         ["moonmint.deps.secure-socket.context"] = "moonmint/deps/secure-socket/context.lua",
