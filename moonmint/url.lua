@@ -37,7 +37,7 @@ local function urlEncode(str)
         str = gsub(str, '[^%w ]', function (c)
             return format('%%%02X', byte(c))
         end)
-        str = gsub(str, ' ', '%+')
+        str = gsub(str, ' ', '+')
     end
     return str
 end
