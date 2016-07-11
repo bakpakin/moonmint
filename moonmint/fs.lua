@@ -39,7 +39,7 @@ local function noop() end
 
 local function makeCallback()
     local thread = corunning()
-    if thread and uv.loop_alive() then -- Non Blocking callback (coroutines)
+    if thread then -- Non Blocking callback (coroutines)
         return function (err, value, ...)
             if err then
                 assert(coresume(thread, nil, err))
@@ -60,7 +60,9 @@ end
 local unpack = unpack or table.unpack
 local function tryYield(context)
     if context then -- Blocking
-        uv.run("once") -- Should we use the defualt event loop?
+        if not uv.loop_alive() then
+            uv.run() -- Should we use the defualt event loop?
+        end
         local err = context.err
         local first = context.first
         if err then

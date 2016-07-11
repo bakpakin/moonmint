@@ -70,23 +70,35 @@ function util.queryParser(req, go)
     return go()
 end
 
+local unpack = unpack or table.unpack
+local crunning = coroutine.running
+local cwrap = coroutine.wrap
+
 function util.corosync(fn)
-    local unpack = unpack or table.unpack
-    local crunning = coroutine.running
-    local cwrap = coroutine.wrap
-    local run = uv.run
-    local loop_alive = uv.loop_alive
     return function(...)
-        if crunning() and loop_alive() then
+        if crunning() then
             return fn(...)
         else
             local ret
             cwrap(function(...)
                 ret = {fn(...)}
             end)(...)
-            run()
+            if not uv.loop_alive() then
+                uv.run()
+            end
             return unpack(ret)
         end
+    end
+end
+
+function util.async(fn, ...)
+    if not crunning() then
+        cwrap(fn)(...)
+        if not uv.loop_alive() then
+            uv.run()
+        end
+    else
+        fn(...)
     end
 end
 
