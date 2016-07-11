@@ -1,5 +1,7 @@
 # moonmint
 
+NOTE: moonmint is a Work In Progress. API is not stable.
+
 ![Travis](https://travis-ci.org/bakpakin/moonmint.svg?branch=master)
 
 __moonmint__ is an HTTP web framework for Lua.
@@ -11,10 +13,10 @@ Check out the [wiki](https://github.com/bakpakin/moonmint/wiki) for more informa
 ## Features
 
 * Simple and flexible express-like routing
-* Powerful agent for making HTTP requests
 * Middleware
 * Static file server
-* Asynchronous operation
+* Nonblocking operations with coroutines and libuv
+* Powerful asynchronous agent for making HTTP requests
 * Templating engine
 
 ## Quick Install
