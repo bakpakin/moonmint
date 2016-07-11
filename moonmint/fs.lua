@@ -50,6 +50,7 @@ local function makeCallback()
     else -- Blocking callback
         local context = {}
         return function (err, first, ...)
+            context.done = true
             context.err = err
             context.first = first
             context.values = {...}
@@ -60,8 +61,8 @@ end
 local unpack = unpack or table.unpack
 local function tryYield(context)
     if context then -- Blocking
-        if not uv.loop_alive() then
-            uv.run() -- Should we use the defualt event loop?
+        while not context.done do
+            uv.run('once') -- Should we use the defualt event loop?
         end
         local err = context.err
         local first = context.first

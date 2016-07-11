@@ -80,11 +80,13 @@ function util.corosync(fn)
             return fn(...)
         else
             local ret
+            local loop = true
             cwrap(function(...)
                 ret = {fn(...)}
+                loop = false
             end)(...)
-            if not uv.loop_alive() then
-                uv.run()
+            while loop do
+                uv.run('once')
             end
             return unpack(ret)
         end
@@ -93,9 +95,13 @@ end
 
 function util.async(fn, ...)
     if not crunning() then
-        cwrap(fn)(...)
-        if not uv.loop_alive() then
-            uv.run()
+        local loop = true
+        cwrap(function(...)
+            fn(...)
+            loop = false
+        end)(...)
+        while loop do
+            uv.run('once')
         end
     else
         fn(...)
