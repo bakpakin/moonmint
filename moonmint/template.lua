@@ -161,7 +161,7 @@ local function primaryEscape(str)
             if btypename ~= 'literal' then
                 body = trim(body)
                 if body:byte() == 38 then
-                    htmlEscape = false
+                    htmlEscaped = false
                     body = body:sub(2, -1)
                 end
             end
