@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "0.0.1"
+version = "0.0.1-1"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
     tag = version
