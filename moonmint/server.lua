@@ -173,10 +173,11 @@ function Server:close()
 end
 
 local function defaultErrorHandler(err)
-    print('Internal Server Error:', err)
+    local fullError = 'Internal Sever Error:\n' .. debug.traceback(err)
+    print(fullError)
     return {
         code = 500,
-        body = 'Internal Server Error'
+        body = fullError
     }
 end
 
@@ -186,14 +187,15 @@ function Server:start(options)
     end
     local bindings = self.bindings
     if #bindings < 1 then
-        self:bind()
+        self:bind(options)
     end
     for i = 1, #bindings do
         local binding = bindings[i]
         local newBinding = {
             host = binding.host,
             port = binding.port,
-            onStart = binding.onStart
+            onStart = binding.onStart,
+            errorHandler = binding.errorHandler
         }
         local tls = binding.tls or options.tls
         if tls then
@@ -206,9 +208,9 @@ function Server:start(options)
         local callback = function(...) return onConnect(self, newBinding, ...) end
 
         -- Set request error handler unless explicitely disabled
-        if binding.errorHandler ~= false then
-            if options.errorHandler~= false then
-                binding.errorHandler = binding.errorHandler or
+        if newBinding.errorHandler ~= false then
+            if options.errorHandler ~= false then
+                newBinding.errorHandler = newBinding.errorHandler or
                     options.errorHandler or
                     defaultErrorHandler
             end
