@@ -6,14 +6,12 @@ source = {
 }
 description = {
     homepage = "https://github.com/bakpakin/moonmint",
-    summary = "Express like web framework for Lua",
+    summary = "Web framework for Lua",
     license = "MIT",
 }
 dependencies = {
     "lua >= 5.1",
     "luv ~> 1.8",
-    "luv-coro-channel >= 1.8",
-    "luv-coro-net >= 1.8",
     "mimetypes >= 1.0",
     "bkopenssl >= 0.0",
     "bit32"
@@ -21,20 +19,27 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["moonmint"] = "init.lua",
+        ["moonmint"] = "moonmint/init.lua",
 
-        ["moonmint.server"] = "src/server.lua",
-        ["moonmint.static"] = "src/static.lua",
-        ["moonmint.util"] = "src/util.lua",
-        ["moonmint.router"] = "src/router.lua",
-        ["moonmint.template"] = "src/template.lua",
-        ["moonmint.fs"] = "src/fs.lua",
-        ["moonmint.headers"] = "src/headers.lua",
-        ["moonmint.request"] = "src/request.lua",
-        ["moonmint.response"] = "src/response.lua",
+        ["moonmint.agent"] = "moonmint/agent.lua",
+        ["moonmint.fs"] = "moonmint/fs.lua",
+        ["moonmint.html"] = "moonmint/html.lua",
+        ["moonmint.response"] = "moonmint/response.lua",
+        ["moonmint.router"] = "moonmint/router.lua",
+        ["moonmint.server"] = "moonmint/server.lua",
+        ["moonmint.static"] = "moonmint/static.lua",
+        ["moonmint.template"] = "moonmint/template.lua",
+        ["moonmint.url"] = "moonmint/url.lua",
+        ["moonmint.util"] = "moonmint/util.lua",
 
-        ["moonmint.deps.codec.http"] = "deps/codec/http.lua",
-        ["moonmint.deps.codec.tls"] = "deps/codec/tls.lua",
-        ["moonmint.deps.pathjoin"] = "deps/pathjoin.lua"
+        ["moonmint.deps.http-headers"] = "moonmint/deps/http-headers.lua",
+        ["moonmint.deps.coro-wrapper"] = "moonmint/deps/coro-wrapper.lua",
+        ["moonmint.deps.coro-channel"] = "moonmint/deps/coro-channel.lua",
+        ["moonmint.deps.coro-net"] = "moonmint/deps/coro-net.lua",
+        ["moonmint.deps.httpCodec"] = "moonmint/deps/httpCodec.lua",
+        ["moonmint.deps.secure-socket.biowrap"] = "moonmint/deps/secure-socket/biowrap.lua",
+        ["moonmint.deps.secure-socket.context"] = "moonmint/deps/secure-socket/context.lua",
+        ["moonmint.deps.secure-socket"] = "moonmint/deps/secure-socket/init.lua",
+        ["moonmint.deps.pathjoin"] = "moonmint/deps/pathjoin.lua"
     }
 }
