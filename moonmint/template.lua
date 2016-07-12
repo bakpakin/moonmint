@@ -184,7 +184,7 @@ local function wrapOptions(options)
             if raw ~= nil then
                 return raw
             end
-            raw = htmlEscape(options[key])
+            raw = htmlEscape(tostring(options[key]))
             self[key] = raw
             return raw
         end
