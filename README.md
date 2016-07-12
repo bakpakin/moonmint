@@ -33,7 +33,7 @@ directory to luarocks to install bkopenssl.
 
 Use luarocks to install
 ```
-luarocks install moonmint
+luarocks install --server=http://luarocks.org/dev moonmint
 ```
 
 See the wiki for more information.
