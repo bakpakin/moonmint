@@ -1,7 +1,7 @@
 # TODO
 
 ## Goals
-* Add testing for server code - (requires agent for sending requests)
+* Add testing for server code
 * Add more testing in general
 * Remove some luvit and lit libraries depenencies (httpCodec, coro-net, maybe secure socket.)
 * Cookie utilities
