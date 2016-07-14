@@ -154,7 +154,7 @@ end
 function Server:bind(options)
     options = options or {}
     if not options.host then
-        options.host = '127.0.0.1'
+        options.host = '0.0.0.0'
     end
     if not options.port then
         options.port = uv.getuid() == 0 and
