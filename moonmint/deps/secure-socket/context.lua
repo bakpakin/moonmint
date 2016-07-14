@@ -30,7 +30,7 @@ local DEFAULT_CIPHERS = 'ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:' .. -- TLS 1
 local DEFAULT_CA_STORE
 do
 
-    local data = require("moonmint.deps.secure-socket.root_ca.dat")
+    local data = require("moonmint.deps.secure-socket.root_ca")
     DEFAULT_CA_STORE = openssl.x509.store:new()
     local index = 1
     local dataLength = #data
