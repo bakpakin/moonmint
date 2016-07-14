@@ -95,6 +95,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             path = path,
             originalPath = path,
             rawQuery = rawQuery,
+            binding = binding,
             read = read,
             headers = getHeaders(head),
             version = head.version,
