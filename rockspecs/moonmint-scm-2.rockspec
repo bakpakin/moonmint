@@ -1,8 +1,8 @@
 package = "moonmint"
-version = "dev-1"
+version = "scm-2"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
-    tag = "dev"
+    tag = "master"
 }
 description = {
     homepage = "https://github.com/bakpakin/moonmint",
