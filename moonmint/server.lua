@@ -105,7 +105,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
         -- Catch errors
         local status, res = pcall(self._router.doRoute, self._router, req)
         if not status then
-            status, res = pcall(binding.errorHandler, res, req, self, binding)
+            status, res = pcall(binding.errorHandler, res, req)
             if not status then
                 socket:close()
                 break
@@ -121,7 +121,7 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             status, res = pcall(response, res)
             if not status then
                 status, res = pcall(binding.errorHandler,
-                'expected table as response', req, self, binding)
+                'expected table as response', req)
                 if not status then
                     break
                 end
