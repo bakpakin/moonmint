@@ -39,7 +39,7 @@ build = {
         ["moonmint.deps.httpCodec"] = "moonmint/deps/httpCodec.lua",
         ["moonmint.deps.secure-socket.biowrap"] = "moonmint/deps/secure-socket/biowrap.lua",
         ["moonmint.deps.secure-socket.context"] = "moonmint/deps/secure-socket/context.lua",
-        ["moonmint.deps.secure-socket.root_ca.dat"] = "moonmint/deps/secure-socket/root_ca.dat.lua",
+        ["moonmint.deps.secure-socket.root_ca"] = "moonmint/deps/secure-socket/root_ca.lua",
         ["moonmint.deps.secure-socket"] = "moonmint/deps/secure-socket/init.lua",
         ["moonmint.deps.pathjoin"] = "moonmint/deps/pathjoin.lua"
     }
