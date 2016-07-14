@@ -1,5 +1,5 @@
 package = "moonmint"
-version = "scm-2"
+version = "scm-3"
 source = {
     url = "git://github.com/bakpakin/moonmint.git",
     tag = "master"
