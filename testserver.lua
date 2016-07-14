@@ -16,4 +16,23 @@ app:use('/', moonmint.static {
     end
 })
 
+app:bind {
+    port = 8081,
+    onStart = function() print('hi1') end
+}
+
+app:bind {
+    port = 8082,
+    onStart = function() print('hi2') end
+}
+
+local google = moonmint.agent
+    :get('http://google.com/search')()
+
+function google:search(query)
+    return self():param('q', query):send().body
+end
+
+print(google:search('hi'))
+
 app:start()

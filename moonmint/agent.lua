@@ -29,7 +29,6 @@ local net = require 'moonmint.deps.coro-net'
 local setmetatable = setmetatable
 local crunning = coroutine.running
 local match = string.match
-local rawget = rawget
 
 local connections = {}
 
@@ -225,10 +224,14 @@ function request:send(options, body)
         return sendImpl(self, body)
     else
         local ret
+        local loop = true
         coroutine.wrap(function()
             ret = sendImpl(self, body)
+            loop = false
         end)()
-        uv.run()
+        while loop do
+            uv.run('once')
+        end
         return ret
     end
 end
@@ -317,7 +320,7 @@ function request:accept(...)
     return self
 end
 
-local function makeRequest(parent, index)
+local function makeRequest(parent)
     local params = {}
     if parent and parent.params then
         for k, v in pairs(parent.params) do
@@ -330,29 +333,17 @@ local function makeRequest(parent, index)
             __index = parent.config
         })
     }, {
-        __index = index or parent,
-        __call = request.send
+        __index = parent,
+        __call = makeRequest
     })
 end
 
-function request:blueprint()
-    local function index(self1, key)
-        local value = rawget(self1, key)
-        if value ~= nil then
-            return value
-        end
-        value = self[key]
-        if type(value) == 'function' then
-            local function method(self2, ...)
-                local new = makeRequest(self2)
-                return new[key](new, ...)
-            end
-            self[key] = method
-            return method
-        end
-        return value
+local M = {}
+
+for k, v in pairs(request) do
+    M[k] = function(_, ...)
+        return v(makeRequest(request), ...)
     end
-    return makeRequest(self, index)
 end
 
-return makeRequest(request):blueprint()
+return M

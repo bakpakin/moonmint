@@ -16,7 +16,6 @@ limitations under the License.
 
 --]]
 local openssl = require('openssl')
-local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
 local bit
 do
@@ -31,16 +30,7 @@ local DEFAULT_CIPHERS = 'ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:' .. -- TLS 1
 local DEFAULT_CA_STORE
 do
 
-    local function loadResource(path)
-        local callerPath = debug.getinfo(2, "S").source:sub(2)
-        local file = pathJoin(callerPath, '..', path)
-        local f = io.open(file, "rb")
-        local content = f:read("*all")
-        f:close()
-        return content
-    end
-
-    local data = assert(loadResource("./root_ca.dat"))
+    local data = require("moonmint.deps.secure-socket.root_ca.dat")
     DEFAULT_CA_STORE = openssl.x509.store:new()
     local index = 1
     local dataLength = #data
