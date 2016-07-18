@@ -74,37 +74,28 @@ local unpack = unpack or table.unpack
 local crunning = coroutine.running
 local cwrap = coroutine.wrap
 
-function util.corosync(fn)
-    return function(...)
-        if crunning() then
-            return fn(...)
-        else
-            local ret
-            local loop = true
-            cwrap(function(...)
-                ret = {fn(...)}
-                loop = false
-            end)(...)
-            while loop do
-                uv.run('once')
-            end
-            return unpack(ret)
-        end
-    end
-end
-
-function util.async(fn, ...)
+--- Calls a coroutine function that is asynchronous with libuv
+-- and allows it to be blocking if not in a coroutine.
+function util.callSync(fn, ...)
     if not crunning() then
+        local ret
         local loop = true
         cwrap(function(...)
-            fn(...)
+            ret = {fn(...)}
             loop = false
         end)(...)
         while loop do
             uv.run('once')
         end
+        return unpack(ret)
     else
-        fn(...)
+        return fn(...)
+    end
+end
+
+function util.wrapSync(fn)
+    return function(...)
+        return util.callSync(fn, ...)
     end
 end
 

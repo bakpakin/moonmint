@@ -16,13 +16,4 @@ app:use('/', moonmint.static {
     end
 })
 
-local google = moonmint.agent
-    :get('https://www.google.com/search')()
-
-function google:search(query)
-    return self():param('q', query):send().body
-end
-
-print(google:search('hi'))
-
 app:start()

@@ -16,34 +16,14 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local function testEncodeGen(encode, decode, assert)
-    return function(data, encoded_form)
-        local encoded_data = encode(data)
-        if encoded_form then
-            assert.are.equal(encoded_data, encoded_form)
-        end
-        assert.are.same(data, decode(encoded_data))
-    end
-end
+local server = require 'moonmint.server'
+local helper = require 'spec.helper'
+local agent = require 'moonmint.agent'
 
-local function makeTestServer(app, start)
-    local moonmint = require('moonmint')
-    local done = false
-    local port = 8080
-    while not done do
-        local testserver = moonmint()
-        testserver:bind {
-            port = port,
-            onStart = start
-        }
-        done = pcall(function()
-            testserver:start()
-        end)
-        port = port + 1
-    end
-end
+describe("Simple server.", function()
 
-return {
-    makeTestServer = makeTestServer,
-    encode = testEncodeGen
-}
+    it("Can run a basic echo server", function()
+        local app = server():get('/', 'hi!')
+    end)
+
+end)

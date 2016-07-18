@@ -221,7 +221,11 @@ function Server:start(options)
         table.insert(self.netServers, createServer(binding, callback))
         local onStart = binding.onStart or options.onStart
         if onStart then
-            onStart(self, binding)
+            local timer = uv.new_timer()
+            timer:start(0, 0, coroutine.wrap(function()
+                onStart(self, binding)
+                timer:close()
+            end))
         end
     end
     if not options.noUVRun then
