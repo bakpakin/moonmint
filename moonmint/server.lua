@@ -192,26 +192,19 @@ function Server:start(options)
     end
     for i = 1, #bindings do
         local binding = bindings[i]
-        local newBinding = {
-            host = binding.host,
-            port = binding.port,
-            onStart = binding.onStart,
-            errorHandler = binding.errorHandler
-        }
         local tls = binding.tls or options.tls
         if tls then
-            newBinding.tls = {
+            binding.tls = {
                 key = tls.key,
-                cert = tls.cert,
-                server = true
+                cert = tls.cert
             }
         end
-        local callback = function(...) return onConnect(self, newBinding, ...) end
+        local callback = function(...) return onConnect(self, binding, ...) end
 
         -- Set request error handler unless explicitely disabled
-        if newBinding.errorHandler ~= false then
+        if binding.errorHandler ~= false then
             if options.errorHandler ~= false then
-                newBinding.errorHandler = newBinding.errorHandler or
+                binding.errorHandler = binding.errorHandler or
                     options.errorHandler or
                     defaultErrorHandler
             end
@@ -222,7 +215,8 @@ function Server:start(options)
         local onStart = binding.onStart or options.onStart
         if onStart then
             local timer = uv.new_timer()
-            timer:start(0, 0, coroutine.wrap(function()
+            local timeout = binding.timeout or options.timeout or 100
+            timer:start(timeout, 0, coroutine.wrap(function()
                 onStart(self, binding)
                 timer:close()
             end))

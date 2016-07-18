@@ -34,7 +34,9 @@ local function makeTestServer(app, start)
         local testserver = moonmint()
         testserver:bind {
             port = port,
-            onStart = start
+            onStart = function()
+                return start(port)
+            end
         }
         done = pcall(function()
             testserver:start()
@@ -43,7 +45,15 @@ local function makeTestServer(app, start)
     end
 end
 
+local function agentTester(app, start)
+    local agent = require 'moonmint.agent'
+    makeTestServer(app, function(port)
+        start(agent:uri('http://localhost:' .. port):module())
+    end)
+end
+
 return {
     makeTestServer = makeTestServer,
+    agentTester = agentTester,
     encode = testEncodeGen
 }

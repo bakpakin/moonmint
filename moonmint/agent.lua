@@ -169,8 +169,13 @@ end
 
 local function sendImpl(self, body)
     body = body or self.body
-    local uri = self.url
-    local proto, hostname, path = match(uri, '^([a-z]*).-([%w%.%-]+)(.*)$')
+    local uri = self.url or ''
+    local proto = match(uri, '^https?://')
+    if proto then
+        uri = uri:sub(#proto + 1)
+    end
+    local hostname, path = match(uri, '^([%w%:%.%-]*)(.-)$')
+    hostname, path = hostname or '', path or ''
 
     -- Make path
     if self.path then
@@ -186,13 +191,19 @@ local function sendImpl(self, body)
     end
 
     -- Get port, host, and protocol
-    local tls = proto == 'https'
-    local host, port = match(hostname, '^([^:]+):?(%d-)$')
+    local tls = proto == 'https://'
+    local host, port = match(hostname, '^([^:]+):?(%d*)$')
     if port == '' then
         port = tls and 443 or 80
     else
-        port = tonumber(port)
+        port = tonumber(port) or 80
     end
+
+    -- Resolve localhost
+    if nost == '' or host == 'localhost' or not host then
+        host = '127.0.0.1'
+    end
+    print(host, port)
 
     local head = makeHead(self, host, path, body)
     local resHead, resBody = requestImpl(self, tls, hostname, port, head, body)
@@ -306,6 +317,10 @@ local acceptMappings = {
     all = '*/*'
 }
 
+local typeMapping = {
+    text = 'text/plain'
+}
+
 function request:accept(...)
     local currentlyAccepts = self.headers.Accept or ''
     if not match(currentlyAccepts, ';%s*$') then
@@ -318,6 +333,37 @@ function request:accept(...)
     end
     self.headers.Accept = currentlyAccepts .. table.concat(toAccept, '; ')
     return self
+end
+
+function request:type(tp)
+    self.headers['Content-Type'] = typeMappings[tp] or acceptMappings[tp] or tp
+    return self
+end
+
+function request:module()
+    local newModule = {}
+    return setmetatable(newModule, {
+        __index = function(child, key)
+            local value = rawget(child, key)
+            if value ~= nil then
+                return value
+            end
+            value = self[key]
+            if type(value) == 'function' then
+                local method = function(self1, ...)
+                    if self1 == newModule then
+                        local new = self()
+                        return new[key](new, ...)
+                    else
+                        return value(self1, ...)
+                    end
+                end
+                child[key] = method
+                return method
+            end
+            return value
+        end
+    })
 end
 
 local function makeRequest(parent)
@@ -341,8 +387,12 @@ end
 local M = {}
 
 for k, v in pairs(request) do
-    M[k] = function(_, ...)
-        return v(makeRequest(request), ...)
+    M[k] = function(self, ...)
+        if self == M then
+            return v(makeRequest(request), ...)
+        else
+            return v(makeRequest(request), self, ...)
+        end
     end
 end
 

@@ -23,7 +23,17 @@ local agent = require 'moonmint.agent'
 describe("Simple server.", function()
 
     it("Can run a basic echo server", function()
+        async()
+
         local app = server():get('/', 'hi!')
+        helper.agentTester(app, function(tester)
+            local response = tester:get('/'):send()
+            assert.are.same(response.body, 'hi!')
+
+            app:close()
+            done()
+
+        end)
     end)
 
 end)
