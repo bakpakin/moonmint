@@ -19,6 +19,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- Connection and Request code modified from
 -- https://github.com/luvit/lit/blob/master/deps/coro-http.lua
 
+--- @classmod Agent
+--
+-- The Agent class is used to make HTTP requests.
+-- Query APIs on a server or make your own HTTP client.
+--
+-- @author Calvin Rose
+-- @license MIT
+-- @copyright 2016
+--
+
 local uv = require 'luv'
 local response = require 'moonmint.response'
 local httpHeaders = require 'moonmint.deps.http-headers'
@@ -77,7 +87,7 @@ end
 
 local function makeHead(self, host, path, body)
     -- Use GET as default method
-    local method = self.method or 'GET'
+    local method = self:getConf('method') or 'GET'
     local head = {
         method = method,
         path = path,
@@ -152,7 +162,7 @@ local function requestImpl(self, tls, hostname, port, head, body)
     end
 
     -- Follow redirects
-    if not self.config.noFollow and
+    if not self:getConf('noFollow') and
         head.method == "GET" and
         (res.code == 302 or res.code == 307) then
         for i = 1, #res do
@@ -168,8 +178,8 @@ local function requestImpl(self, tls, hostname, port, head, body)
 end
 
 local function sendImpl(self, body)
-    body = body or self.body
-    local uri = self.url or ''
+    body = body or self:getConf('body')
+    local uri = self:getConf('url')
     local proto = match(uri, '^https?://')
     if proto then
         uri = uri:sub(#proto + 1)
@@ -178,8 +188,9 @@ local function sendImpl(self, body)
     hostname, path = hostname or '', path or ''
 
     -- Make path
-    if self.path then
-        path = pathJoin(path, self.path)
+    local selfPath = self:getConf('path')
+    if selfPath then
+        path = pathJoin(path, selfPath)
     end
     if path == '' then
         path = '/'
@@ -200,10 +211,9 @@ local function sendImpl(self, body)
     end
 
     -- Resolve localhost
-    if nost == '' or host == 'localhost' or not host then
+    if host == '' or host == 'localhost' or not host then
         host = '127.0.0.1'
     end
-    print(host, port)
 
     local head = makeHead(self, host, path, body)
     local resHead, resBody = requestImpl(self, tls, hostname, port, head, body)
@@ -217,19 +227,35 @@ local function sendImpl(self, body)
     }
 end
 
-local request = {}
+local Agent = {}
 
-function request:conf(key, value)
+--- Configure a key value pair on the Agent
+--@param key
+--@param value
+-- @return self
+function Agent:conf(key, value)
     self.config[key] = value
     return self
 end
 
-function request:send(options, body)
-    if type(options) == 'table' then
-        self = self:options(options)
-    else
-        body = options
-    end
+--- Get a configured option on the Agent
+-- @param key
+-- @return the value
+function Agent:getConf(key)
+    return self.config[key]
+end
+
+--- Set the body of the Agent.
+-- @param body the body of the agent
+-- @return self
+function Agent:body(body)
+    return self:conf('body', body)
+end
+
+--- Send a request with the Agent, with an optional body.
+-- @param body the (optional) body of the request
+-- @return self
+function Agent:send(body)
     local thread = crunning()
     if thread and uv.loop_alive() then
         return sendImpl(self, body)
@@ -247,62 +273,70 @@ function request:send(options, body)
     end
 end
 
-function request:options(options)
-    if not options then
-        return self
-    end
-    self.url = options.url or self.url
-    self.path = options.path or self.path
-    self.headers = httpHeaders.combineHeaders(self.headers,
-        httpHeaders.newHeaders(options.headers))
-    self.method = options.method or self.method
-    self.noFollow = options.noFollow or self.noFollow
-    if options.params then
-        for k, v in pairs(options.params) do
-            self.params[k] = v
-        end
-    end
-    return self
-end
-
-function request:set(header, value)
+--- Set a header to a certain value. Headers are case-insensitive.
+-- @param header the Header to set
+-- @param value the value of the header
+-- @return self
+function Agent:set(header, value)
     self.headers[header] = value
     return self
 end
 
-function request:param(key, value)
-    self.params[key] = value
+--- Sets a query parameter. The value should be a string.
+-- @param key the name of the parameter
+-- @param value the value of the parameter
+-- @return self
+function Agent:param(key, value)
+    self.params[key] = value or true
     return self
 end
 
-function request:uri(uri)
+--- Sets the url of the Agent. Can either just the url host, path, pr a combination of both.
+-- @param uri
+-- @return self
+function Agent:url(uri)
     if match(uri, '^[a-z]+://') then
-        self.url = uri
+        return self:conf('url', uri)
     else
-        self.path = uri
+        return self:conf('path', uri)
     end
-    return self
 end
 
-function request:get(uri)
-    self.method = 'GET'
-    return self:uri(uri)
+function Agent:pathjoin(path)
+    if match(path, '^[a-z]+://') then
+        return self:conf('url', path)
+    else
+        local oldPath = self:getConf('path')
+        if oldPath then
+            return self:conf('path', pathJoin(oldPath, path))
+        else
+            return self:conf('path', path)
+        end
+    end
 end
 
-function request:delete(uri)
-    self.method = 'DELETE'
-    return self:uri(uri)
-end
-request.del = request.delete
-
-function request:put(uri)
-    self.method = 'PUT'
-    return self:uri(uri)
+--- Sets the HTTP method of the request.
+-- @param method
+-- @return self
+function Agent:method(method)
+    return self:conf('method', tostring(method):upper())
 end
 
-function request:post(uri)
-    self.method = 'POST'
-    return self:uri(uri)
+function Agent:get(uri)
+    return self:method('GET'):url(uri)
+end
+
+function Agent:delete(uri)
+    return self:method('DELETE'):url(uri)
+end
+Agent.del = Agent.delete
+
+function Agent:put(uri)
+    return self:method('PUT'):url(uri)
+end
+
+function Agent:post(uri)
+    return self:method('POST'):url(uri)
 end
 
 -- Just some useful shortcuts
@@ -317,11 +351,11 @@ local acceptMappings = {
     all = '*/*'
 }
 
-local typeMapping = {
+local typeMappings = {
     text = 'text/plain'
 }
 
-function request:accept(...)
+function Agent:accept(...)
     local currentlyAccepts = self.headers.Accept or ''
     if not match(currentlyAccepts, ';%s*$') then
         currentlyAccepts = currentlyAccepts .. '; '
@@ -335,12 +369,21 @@ function request:accept(...)
     return self
 end
 
-function request:type(tp)
+--- Sets the content type of the Agent.
+-- @param tp the content type. Can be a full mime type or a short alias, like 'json'
+-- @return self
+function Agent:type(tp)
     self.headers['Content-Type'] = typeMappings[tp] or acceptMappings[tp] or tp
     return self
 end
 
-function request:module()
+--- Creates a module out of an Agent. The module behaves
+-- the same as the original Agent, but creates a copy
+-- of the original Agent on all methods. This is very
+-- useful for creating interfaces to APIs, or otherwise
+-- reusing complex Agent configurations with modifications.
+-- @return a new module
+function Agent:module()
     local newModule = {}
     return setmetatable(newModule, {
         __index = function(child, key)
@@ -386,12 +429,12 @@ end
 
 local M = {}
 
-for k, v in pairs(request) do
+for k, v in pairs(Agent) do
     M[k] = function(self, ...)
         if self == M then
-            return v(makeRequest(request), ...)
+            return v(makeRequest(Agent), ...)
         else
-            return v(makeRequest(request), self, ...)
+            return v(makeRequest(Agent), self, ...)
         end
     end
 end

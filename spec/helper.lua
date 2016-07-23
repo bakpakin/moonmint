@@ -29,7 +29,7 @@ end
 local function makeTestServer(app, start)
     local moonmint = require('moonmint')
     local done = false
-    local port = 8080
+    local port = 8000
     while not done do
         local testserver = moonmint()
         testserver:bind {
@@ -48,7 +48,7 @@ end
 local function agentTester(app, start)
     local agent = require 'moonmint.agent'
     makeTestServer(app, function(port)
-        start(agent:uri('http://localhost:' .. port):module())
+        start(agent:url('http://localhost:' .. port):module())
     end)
 end
 
