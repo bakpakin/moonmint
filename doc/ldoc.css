@@ -1,0 +1,128 @@
+@import 'http://fonts.googleapis.com/css?family=Josefin+Sans|Rasa|Source+Code+Pro';
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strong, sub, sup, var,
+b, u, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* Main CSS */
+
+/* Naviation */
+body {
+    top: 0;
+    font-family: 'Rasa', serif;
+    font-size: 1.1em;
+}
+
+#navigation {
+    background-color: #efefef;
+    top: 0;
+    left: 0;
+    position: fixed;
+    width: 16em;
+    padding: 1em;
+    min-height: 100%;
+}
+
+#navigation h1 {
+    color: #FF9D9D;
+    margin: 1em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Josefin Sans', serif;
+}
+
+h1 {
+    font-size: 3em;
+    margin 0.5em 0;
+}
+
+h2 {
+    font-size: 1.7em;
+    margin: 0.5em 0;
+}
+
+h3 {
+    font-size 1.3em;
+    margin: 0.35em 0;
+    margin-top: 0.8em;
+}
+
+ul, ol {
+    margin: 0 1em;
+}
+
+/* Main Content */
+
+#content {
+    margin-left: 18em;
+    padding: 1em;
+    width: auto;
+}
+
+#content h1 {
+    margin: 0.4em 0;
+}
+
+.function dt {
+    font-size: 1.3em;
+    color: #FF9D9D;
+    padding-bottom: 0.5em;
+    font-family: 'Source Code Pro', monospace;
+}
+
+.function dd {
+    padding-bottom: 1.5em;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Misc */
+
+::selection{
+    background: yellow;
+}
+
+#about {
+    margin-top: 4em;
+    margin-left: 18em;
+    padding: 2em;
+}
