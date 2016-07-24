@@ -65,8 +65,8 @@ local function normalizer(_, go)
 end
 
 -- Refactor to use uv.sendfile?
-local function file(path)
-    local body, err = fs.readFile(path)
+local function fileImpl(path, sync)
+    local body, err = fs.ext.readFile(sync, path)
     if not body then
         error(err)
     end
@@ -81,6 +81,14 @@ local function file(path)
     }
 end
 
+local function fileSync(path)
+    return file(path, true)
+end
+
+local function fileAsync(path)
+    return file(path, false)
+end
+
 local function redirect(location, code)
     return {
         code = code or 302,
@@ -91,7 +99,8 @@ local function redirect(location, code)
 end
 
 return setmetatable({
-    file = file,
+    fileSync = fileSync,
+    file = fileAsync,
     normalizer = normalizer,
     redirect = redirect,
     create = responsify

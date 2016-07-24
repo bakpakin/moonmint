@@ -37,9 +37,9 @@ local coyield = coroutine.yield
 
 local function noop() end
 
-local function makeCallback()
+local function makeCallback(sync)
     local thread = corunning()
-    if thread then -- Non Blocking callback (coroutines)
+    if thread and not sync then -- Non Blocking callback (coroutines)
         return function (err, value, ...)
             if err then
                 assert(coresume(thread, nil, err))
@@ -62,7 +62,7 @@ local unpack = unpack or table.unpack
 local function tryYield(context)
     if context then -- Blocking
         while not context.done do
-            uv.run('once') -- Should we use the defualt event loop?
+            uv.run('once') -- Should we use the default event loop?
         end
         local err = context.err
         local first = context.first
@@ -77,136 +77,136 @@ local function tryYield(context)
 end
 
 --- Wrapper around uv.fs_mkdir
-function fs.mkdir(path, mode)
-    local cb, context = makeCallback()
+function fs.mkdir(sync, path, mode)
+    local cb, context = makeCallback(sync)
     uv.fs_mkdir(path, mode or 511, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_open
-function fs.open(path, flags, mode)
-    local cb, context = makeCallback()
+function fs.open(sync, path, flags, mode)
+    local cb, context = makeCallback(sync)
     uv.fs_open(path, flags or "r", mode or 428, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_unlink
-function fs.unlink(path)
-    local cb, context = makeCallback()
+function fs.unlink(syc, path)
+    local cb, context = makeCallback(sync)
     uv.fs_unlink(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_stat
-function fs.stat(path)
-    local cb, context = makeCallback()
+function fs.stat(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_stat(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_lstat
-function fs.lstat(path)
-    local cb, context = makeCallback()
+function fs.lstat(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_lstat(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_fstat
-function fs.fstat(fd)
-    local cb, context = makeCallback()
+function fs.fstat(sync, fd)
+    local cb, context = makeCallback(sync)
     uv.fs_fstat(fd, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_chmod
-function fs.chmod(path)
-    local cb, context = makeCallback()
+function fs.chmod(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_chmod(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_fchmod
-function fs.fchmod(path)
-    local cb, context = makeCallback()
+function fs.fchmod(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_fchmod(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_read
-function fs.read(fd, length, offset)
-    local cb, context = makeCallback()
+function fs.read(sync, fd, length, offset)
+    local cb, context = makeCallback(sync)
     uv.fs_read(fd, length or 1024 * 48, offset or -1, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_write
-function fs.write(fd, data, offset)
-    local cb, context = makeCallback()
+function fs.write(sync, fd, data, offset)
+    local cb, context = makeCallback(sync)
     uv.fs_write(fd, data, offset or -1, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_close
-function fs.close(fd)
-    local cb, context = makeCallback()
+function fs.close(sync, fd)
+    local cb, context = makeCallback(sync)
     uv.fs_close(fd, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_symlink
-function fs.symlink(target, path)
-    local cb, context = makeCallback()
+function fs.symlink(sync, target, path)
+    local cb, context = makeCallback(sync)
     uv.fs_symlink(target, path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_readlink
-function fs.readlink(path)
-    local cb, context = makeCallback()
+function fs.readlink(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_readlink(path, cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_access
-function fs.access(path, flags)
-    local cb, context = makeCallback()
+function fs.access(sync, path, flags)
+    local cb, context = makeCallback(sync)
     uv.fs_access(path, flags or '', cb)
     return tryYield(context)
 end
 
 --- Wrapper around uv.fs_rmdir
-function fs.rmdir(path)
-    local cb, context = makeCallback()
+function fs.rmdir(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_rmdir(path, cb)
     return tryYield(context)
 end
 
 --- Remove directories recursively like the UNIX command `rm -rf`.
-function fs.rmrf(path)
-    local success, err = fs.rmdir(path)
+function fs.rmrf(sync, path)
+    local success, err = fs.rmdir(sync, path)
     if success then
         return success, err
     end
-    if err:match('^ENOTDIR:') then return fs.unlink(path) end
+    if err:match('^ENOTDIR:') then return fs.unlink(sync, path) end
     if not err:match('^ENOTEMPTY:') then return success, err end
-    for entry in assert(fs.scandir(path)) do
+    for entry in assert(fs.scandir(sync, path)) do
         local subPath = pathJoin(path, entry.name)
         if entry.type == 'directory' then
-            success, err = fs.rmrf(pathJoin(path, entry.name))
+            success, err = fs.rmrf(sync, pathJoin(path, entry.name))
         else
-            success, err = fs.unlink(subPath)
+            success, err = fs.unlink(sync, subPath)
         end
         if not success then return success, err end
     end
-    return fs.rmdir(path)
+    return fs.rmdir(sync, path)
 end
 
 --- Smart wrapper around uv.fs_scandir.
 -- @treturn function an iterator over file objects
 -- in a directory. Each file table has a `name` property
 -- and a `type` property.
-function fs.scandir(path)
-    local cb, context = makeCallback()
+function fs.scandir(sync, path)
+    local cb, context = makeCallback(sync)
     uv.fs_scandir(path, cb)
     local req, err = tryYield(context)
     if not req then return nil, err end
@@ -222,13 +222,13 @@ function fs.scandir(path)
 end
 
 --- Reads a file into a string
-function fs.readFile(path)
+function fs.readFile(sync, path)
     local fd, stat, data, err
-    fd, err = fs.open(path)
+    fd, err = fs.open(sync, path)
     if err then return nil, err end
-    stat, err = fs.fstat(fd)
+    stat, err = fs.fstat(sync, fd)
     if stat then
-        data, err = fs.read(fd, stat.size)
+        data, err = fs.read(sync, fd, stat.size)
     end
     uv.fs_close(fd, noop)
     return data, err
@@ -238,15 +238,15 @@ end
 -- if it already exists.
 function fs.writeFile(path, data, mkdir)
     local fd, success, err
-    fd, err = fs.open(path, "w")
+    fd, err = fs.open(sync, path, "w")
     if err then
         if mkdir and err:match("^ENOENT:") then
-            success, err = fs.mkdirp(pathJoin(path, ".."))
-            if success then return fs.writeFile(path, data) end
+            success, err = fs.mkdirp(sync, pathJoin(path, ".."))
+            if success then return fs.writeFile(sync, path, data) end
         end
         return nil, err
     end
-    success, err = fs.write(fd, data)
+    success, err = fs.write(sync, fd, data)
     uv.fs_close(fd, noop)
     return success, err
 end
@@ -254,31 +254,52 @@ end
 --- Append a string to a file.
 function fs.appendFile(path, data, mkdir)
     local fd, success, err
-    fd, err = fs.open(path, "w+")
+    fd, err = fs.open(sync, path, "w+")
     if err then
         if mkdir and err:match("^ENOENT:") then
-            success, err = fs.mkdirp(pathJoin(path, ".."))
-            if success then return fs.appendFile(path, data) end
+            success, err = fs.mkdirp(sync, pathJoin(path, ".."))
+            if success then return fs.appendFile(sync, path, data) end
         end
         return nil, err
     end
-    success, err = fs.write(fd, data)
+    success, err = fs.write(sync, fd, data)
     uv.fs_close(fd, noop)
     return success, err
 end
 
 --- Make directories recursively. Similar to the UNIX `mkdir -p`.
 function fs.mkdirp(path, mode)
-    local success, err = fs.mkdir(path, mode)
+    local success, err = fs.mkdir(sync, path, mode)
     if success or err:match("^EEXIST") then
         return true
     end
     if err:mathc("^ENOENT:") then
-        success, err = fs.mkdirp(pathJoin(path, ".."), mode)
+        success, err = fs.mkdirp(sync, pathJoin(path, ".."), mode)
         if not success then return nil, err end
-        return fs.mkdir(path, mode)
+        return fs.mkdir(sync, path, mode)
     end
     return nil, err
+end
+
+-- Make sync and async versions
+local function makeAliases(module)
+    local ext = {}
+    local sync = {}
+    for k, v in pairs(fs) do
+        if type(v) == 'function' then
+            sync[k] = function(...)
+                return v(true, ...)
+            end
+            ext[k] = v
+            fs[k] = function(...)
+                return v(false, ...)
+            end
+        end
+    end
+    module.s = sync
+    module.sync = sync
+    module.ext = ext
+    return module
 end
 
 --- Creates a clone of fs, but with a different base directory.
@@ -295,62 +316,62 @@ function fs.chroot(base)
         assert(path, "path missing")
         return pathJoin(base, pathJoin(path))
     end
-    function chroot.mkdir(path, mode)
-        return fs.mkdir(resolve(path), mode)
+    function chroot.mkdir(sync, path, mode)
+        return fs.mkdir(sync, resolve(path), mode)
     end
-    function chroot.mkdirp(path, mode)
-        return fs.mkdirp(resolve(path), mode)
+    function chroot.mkdirp(sync, path, mode)
+        return fs.mkdirp(sync, resolve(path), mode)
     end
-    function chroot.open(path, flags, mode)
-        return fs.open(resolve(path), flags, mode)
+    function chroot.open(sync, path, flags, mode)
+        return fs.open(sync, resolve(path), flags, mode)
     end
-    function chroot.unlink(path)
-        return fs.unlink(resolve(path))
+    function chroot.unlink(sync, path)
+        return fs.unlink(sync, resolve(path))
     end
-    function chroot.stat(path)
-        return fs.stat(resolve(path))
+    function chroot.stat(sync, path)
+        return fs.stat(sync, resolve(path))
     end
-    function chroot.lstat(path)
-        return fs.lstat(resolve(path))
+    function chroot.lstat(sync, path)
+        return fs.lstat(sync, resolve(path))
     end
-    function chroot.symlink(target, path)
+    function chroot.symlink(sync, target, path)
         -- TODO: should we resolve absolute target paths or treat it as opaque data?
-        return fs.symlink(target, resolve(path))
+        return fs.symlink(sync, target, resolve(path))
     end
-    function chroot.readlink(path)
-        return fs.readlink(resolve(path))
+    function chroot.readlink(sync, path)
+        return fs.readlink(sync, resolve(path))
     end
-    function chroot.chmod(path, mode)
-        return fs.chmod(resolve(path), mode)
+    function chroot.chmod(sync, path, mode)
+        return fs.chmod(sync, resolve(path), mode)
     end
-    function chroot.access(path, flags)
-        return fs.access(resolve(path), flags)
+    function chroot.access(sync, path, flags)
+        return fs.access(sync, resolve(path), flags)
     end
-    function chroot.rename(path, newPath)
-        return fs.rename(resolve(path), resolve(newPath))
+    function chroot.rename(sync, path, newPath)
+        return fs.rename(sync, resolve(path), resolve(newPath))
     end
-    function chroot.rmdir(path)
-        return fs.rmdir(resolve(path))
+    function chroot.rmdir(sync, path)
+        return fs.rmdir(sync, resolve(path))
     end
-    function chroot.rmrf(path)
-        return fs.rmrf(resolve(path))
+    function chroot.rmrf(sync, path)
+        return fs.rmrf(sync, resolve(path))
     end
-    function chroot.scandir(path)
-        return fs.scandir(resolve(path))
+    function chroot.scandir(sync, path)
+        return fs.scandir(sync, resolve(path))
     end
-    function chroot.readFile(path)
-        return fs.readFile(resolve(path))
+    function chroot.readFile(sync, path)
+        return fs.readFile(sync, resolve(path))
     end
-    function chroot.writeFile(path, data, mkdir)
-        return fs.writeFile(resolve(path), data, mkdir)
+    function chroot.writeFile(sync, path, data, mkdir)
+        return fs.writeFile(sync, resolve(path), data, mkdir)
     end
-    function chroot.appendFile(path, data, mkdir)
-        return fs.appendFile(resolve(path), data, mkdir)
+    function chroot.appendFile(sync, path, data, mkdir)
+        return fs.appendFile(sync, resolve(path), data, mkdir)
     end
-    function chroot.chroot(newBase)
-        return fs.chroot(resolve(newBase))
+    function chroot.chroot(sync, newBase)
+        return fs.chroot(sync, resolve(newBase))
     end
-    return chroot
+    return makeAliases(chroot)
 end
 
-return fs
+return makeAliases(fs)

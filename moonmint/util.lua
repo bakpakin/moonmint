@@ -71,26 +71,21 @@ function util.queryParser(req, go)
 end
 
 local unpack = unpack or table.unpack
-local crunning = coroutine.running
 local cwrap = coroutine.wrap
 
 --- Calls a coroutine function that is asynchronous with libuv
--- and allows it to be blocking if not in a coroutine.
+-- and makes it blocking
 function util.callSync(fn, ...)
-    if not crunning() then
-        local ret
-        local loop = true
-        cwrap(function(...)
-            ret = {fn(...)}
-            loop = false
-        end)(...)
-        while loop do
-            uv.run('once')
-        end
-        return unpack(ret)
-    else
-        return fn(...)
+    local ret
+    local loop = true
+    cwrap(function(...)
+        ret = {fn(...)}
+        loop = false
+    end)(...)
+    while loop do
+        uv.run('once')
     end
+    return unpack(ret)
 end
 
 function util.wrapSync(fn)
