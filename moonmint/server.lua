@@ -236,9 +236,7 @@ function Server:startLater(options)
 end
 
 function Server:start(options)
-    coroutine.wrap(function()
-        self:startLater(options)
-    end)()
+    self:startLater(options)
     uv.run()
     return self
 end
