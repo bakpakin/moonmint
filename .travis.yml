@@ -15,11 +15,11 @@ before_install:
   - source env/bin/activate          # Add directory with all installed binaries to PATH.
 
 install:
-  - $LUA genLocalRockspec.lua
+  - lua genLocalRockspec.lua
   - luarocks make # Install the rock, assuming there is a rockspec
 
 script:
-  - $LUA test.lua
+  - lua test.lua
 
 notifications:
   email:
