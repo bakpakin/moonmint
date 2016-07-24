@@ -105,7 +105,7 @@ end
 --     {"name", value},
 --   }
 --
--- Note: Duplicate string keys will overwrite eachother, with the last duplicate 
+-- Note: Duplicate string keys will overwrite eachother, with the last duplicate
 -- key of the last table taking precedence
 local function combineHeaders(...)
   local combined = newHeaders()

@@ -37,7 +37,9 @@ local pathJoin = require 'moonmint.deps.pathjoin'.pathJoin
 local httpCodec = require 'moonmint.deps.httpCodec'
 local net = require 'moonmint.deps.coro-net'
 local setmetatable = setmetatable
-local crunning = coroutine.running
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
+local crunning = coxpcall.running
 local match = string.match
 
 local connections = {}
@@ -464,7 +466,7 @@ for k, v in pairs(Agent) do
     end
 end
 
-function M:close()
+function M.close()
     clearConnections()
 end
 

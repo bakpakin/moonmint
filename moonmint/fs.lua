@@ -31,8 +31,11 @@ local uv = require 'luv'
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
 local fs = {}
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
+local xpcall = coxpcall.xpcall
 local coresume = coroutine.resume
-local corunning = coroutine.running
+local corunning = coxpcall.running
 local coyield = coroutine.yield
 
 local function noop() end

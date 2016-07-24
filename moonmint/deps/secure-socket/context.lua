@@ -16,6 +16,8 @@ limitations under the License.
 
 --]]
 local openssl = require('openssl')
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
 
 local bit
 do

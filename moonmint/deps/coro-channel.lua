@@ -9,6 +9,8 @@
 ]]
 
 -- local p = require('pretty-print').prettyPrint
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
 
 local function makeCloser(socket)
   local closer = {
@@ -116,7 +118,7 @@ local function makeRead(socket, decode, closer)
       paused = false
       assert(socket:read_start(onRead))
     end
-    queue[tindex] = coroutine.running()
+    queue[tindex] = coxpcall.running()
     tindex = tindex + 1
     return coroutine.yield()
   end
@@ -130,7 +132,7 @@ end
 local function makeWrite(socket, encode, closer)
 
   local function wait()
-    local thread = coroutine.running()
+    local thread = coxpcall.running()
     return function (err)
       assert(coroutine.resume(thread, err))
     end

@@ -30,7 +30,8 @@ local coroWrap = require 'moonmint.deps.coro-wrapper'
 
 local setmetatable = setmetatable
 local type = type
-local pcall = pcall
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
 local match = string.match
 
 local Server = {}
@@ -235,7 +236,9 @@ function Server:startLater(options)
 end
 
 function Server:start(options)
-    self:startLater(options)
+    coroutine.wrap(function()
+        self:startLater(options)
+    end)()
     uv.run()
     return self
 end

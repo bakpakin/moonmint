@@ -1,11 +1,14 @@
 
+local coxpcall = require 'coxpcall'
+local pcall = coxpcall.pcall
+local xpcall = coxpcall.xpcall
 
 local uv = require('luv')
 local wrapStream = require('moonmint.deps.coro-channel').wrapStream
 local secureSocket -- Lazy required from "secure-socket" on first use.
 
 local function makeCallback(timeout)
-    local thread = coroutine.running()
+    local thread = coxpcall.running()
     local timer, done
     if timeout then
         timer = uv.new_timer()
@@ -109,7 +112,7 @@ local function createServer(options, onConnect)
         local socket = options.isTcp and uv.new_tcp() or uv.new_pipe(false)
         server:accept(socket)
         coroutine.wrap(function ()
-            local success, failure = xpcall(function ()
+            local success, failure = coxpcall.xpcall(function ()
                 local dsocket
                 if options.tls then
                     if not secureSocket then secureSocket = require('moonmint.deps.secure-socket') end
