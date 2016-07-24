@@ -47,8 +47,8 @@ local function renderLevel(ast, level)
     local res = ast.result
     local rep = report(res.description, res.status)
     print(string.rep('  ', level) .. rep)
-    for _, v in ipairs(ast) do
-        renderLevel(v, level + 1)
+    for i = 1, #ast do
+        renderLevel(ast[i], level + 1)
     end
 end
 
@@ -57,8 +57,8 @@ local function render(ast)
     local errors, numFailed, numPassed = ast.errors, ast.failed, ast.passed
     if #errors > 0 then
         print(('\n%s%d Errors: \n'):format(RED, #errors))
-        for i, v in ipairs(errors) do
-            print(i .. ': ' .. debug.traceback(v))
+        for i = 1, #errors do
+            print(i .. ': ' .. debug.traceback(errors[i]))
         end
     end
     print(('\n%s%d%s Failed, %s%d%s Passed.'):format(

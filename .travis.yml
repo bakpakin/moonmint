@@ -20,7 +20,6 @@ before_install:
   - pip install hererocks
   - hererocks env --$LUA -rlatest    # Use latest LuaRocks, install into 'env' directory.
   - source env/bin/activate          # Add directory with all installed binaries to PATH.
-  - sudo apt-get install -y cmake
 
 install:
   - lua genLocalRockspec.lua
