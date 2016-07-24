@@ -18,18 +18,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local url = require 'moonmint.url'
 local helper = require 'spec.helper'
-local testQuery = helper.encode(url.queryEncode, url.queryDecode, assert)
+local testQuery = helper.encode(url.queryEncode, url.queryDecode)
 
-describe("Query encoding/decoding", function()
+test("Query encoding/decoding", function()
 
-    it("Encodes and decodes strings", function()
+    test("Encodes and decodes strings", function()
         testQuery({
             hello = "kitty",
             cat = "yum"
         })
     end)
 
-    it("Encodes and decodes numbers and strings", function()
+    test("Encodes and decodes numbers and strings", function()
         testQuery({
             [0] = "go",
             jump = "How high?++++",

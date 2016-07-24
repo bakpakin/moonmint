@@ -42,12 +42,22 @@ local match = string.match
 
 local connections = {}
 
+local function clearConnections()
+    for i = 1, #connections do
+        local connection = connections[i]
+        if not connection.socket:is_closing() then
+            connection.socket:close()
+        end
+    end
+    connections = {}
+end
+
 local function getConnection(host, port, tls)
     for i = #connections, 1, -1 do
         local connection = connections[i]
         if connection.host == host and connection.port == port and connection.tls == tls then
             table.remove(connections, i)
-            -- Make sure the connection is still alive before reusing it.
+            -- make sure the connection is still alive before reusing it.
             if not connection.socket:is_closing() then
                 connection.reused = true
                 connection.socket:ref()
@@ -216,7 +226,7 @@ local function sendImpl(self, body)
     end
 
     local head = makeHead(self, host, path, body)
-    local resHead, resBody = requestImpl(self, tls, hostname, port, head, body)
+    local resHead, resBody = requestImpl(self, tls, host, port, head, body)
 
     return response {
         body = resBody,
@@ -257,7 +267,7 @@ end
 -- @return self
 function Agent:send(body)
     local thread = crunning()
-    if thread and uv.loop_alive() then
+    if thread then
         return sendImpl(self, body)
     else
         local ret
@@ -271,6 +281,21 @@ function Agent:send(body)
         end
         return ret
     end
+end
+
+function Agent:sendcb(body, cb)
+    if not cb then
+        cb = body
+        body = nil
+    end
+    return coroutine.wrap(function()
+        local status, err = pcall(sendImpl, self, body)
+        if status then
+            return cb(nil, err)
+        else
+            return cb(err)
+        end
+    end)()
 end
 
 --- Set a header to a certain value. Headers are case-insensitive.
@@ -437,6 +462,10 @@ for k, v in pairs(Agent) do
             return v(makeRequest(Agent), self, ...)
         end
     end
+end
+
+function M:close()
+    clearConnections()
 end
 
 return M

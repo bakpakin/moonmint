@@ -182,13 +182,13 @@ local function defaultErrorHandler(err)
     }
 end
 
-function Server:start(options)
+function Server:startLater(options)
     if not options then
         options = {}
     end
     local bindings = self.bindings
     if #bindings < 1 then
-        self:bind(options)
+        self:bind()
     end
     for i = 1, #bindings do
         local binding = bindings[i]
@@ -212,19 +212,32 @@ function Server:start(options)
 
         -- Create server with coro-net
         table.insert(self.netServers, createServer(binding, callback))
-        local onStart = binding.onStart or options.onStart
+        local onStart = binding.onStart
         if onStart then
             local timer = uv.new_timer()
-            local timeout = binding.timeout or options.timeout or 100
-            timer:start(timeout, 0, coroutine.wrap(function()
+            timer:start(0, 0, coroutine.wrap(function()
                 onStart(self, binding)
                 timer:close()
             end))
         end
     end
-    if not options.noUVRun then
-        return uv.run()
+
+    local onStart = options.onStart
+    if onStart then
+        local timer = uv.new_timer()
+        timer:start(0, 0, coroutine.wrap(function()
+            onStart(self)
+            timer:close()
+        end))
     end
+
+    return self
+end
+
+function Server:start(options)
+    self:startLater(options)
+    uv.run()
+    return self
 end
 
 -- Duplicate router functions for the server, so routes and middleware can be placed

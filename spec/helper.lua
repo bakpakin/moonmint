@@ -16,44 +16,57 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local function testEncodeGen(encode, decode, assert)
+local util = require 'moonmint.util'
+
+local function deepEquals(a, b)
+    if type(a) ~= type(b) then
+        return false
+    end
+    if type(a) == 'table' then
+        for k, v in pairs(a) do
+            if not deepEquals(v, b[k]) then
+                return false
+            end
+        end
+        -- Check if b has extra kv pairs
+        for k in pairs(b) do
+            if a[k] == nil then
+                return false
+            end
+        end
+        return true
+    end
+    return a == b
+end
+
+local function testEncodeGen(encode, decode)
     return function(data, encoded_form)
         local encoded_data = encode(data)
         if encoded_form then
-            assert.are.equal(encoded_data, encoded_form)
+            assert(deepEquals(encoded_data, encoded_form))
         end
-        assert.are.same(data, decode(encoded_data))
+        assert(deepEquals(data, decode(encoded_data)))
     end
 end
 
-local function makeTestServer(app, start)
-    local moonmint = require('moonmint')
-    local done = false
-    local port = 8000
-    while not done do
-        local testserver = moonmint()
-        testserver:bind {
-            port = port,
-            onStart = function()
-                return start(port)
-            end
-        }
-        done = pcall(function()
-            testserver:start()
-        end)
-        port = port + 1
-    end
-end
-
-local function agentTester(app, start)
+local function agentTester(cb)
+    local moonmint = require 'moonmint'
     local agent = require 'moonmint.agent'
-    makeTestServer(app, function(port)
-        start(agent:url('http://localhost:' .. port):module())
+    local testServer = moonmint():startLater()
+    local testAgent = agent:url('http://localhost:8080'):module()
+    local ok, err
+    moonmint.go(function()
+        ok, err = pcall(cb, testAgent, testServer)
+        agent:close()
+        testServer:close()
     end)
+    if not ok then
+        error(err)
+    end
 end
 
 return {
-    makeTestServer = makeTestServer,
     agentTester = agentTester,
-    encode = testEncodeGen
+    encode = testEncodeGen,
+    deepEquals = deepEquals
 }

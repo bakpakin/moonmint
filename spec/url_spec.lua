@@ -18,30 +18,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 local url = require 'moonmint.url'
 local helper = require 'spec.helper'
-local testURL = helper.encode(url.encode, url.decode, assert)
+local testURL = helper.encode(url.encode, url.decode)
 
-describe("Url encoding/decoding", function()
+test("Url encoding/decoding", function()
 
-    it("Does basic encoding/decoding of simple strings", function()
+    test("Does basic encoding/decoding of simple strings", function()
         testURL("abcdefg")
         testURL("1233456")
     end)
 
-    it("Encodes/decodes url special characters", function()
+    test("Encodes/decodes url special characters", function()
         testURL("!@#$%^&*()_+.,?:;\\")
     end)
 
-    it("Encodes/decodes those darned plus signs", function()
+    test("Encodes/decodes those darned plus signs", function()
         testURL("+ + +", "%2B+%2B+%2B")
     end)
 
-    it("Encodes/decodes all possible bytes", function()
+    test("Encodes/decodes all possible bytes", function()
         for i = 0, 255 do
             testURL(string.char(i))
         end
     end)
 
-    it ("Encodes/decodes strings of all possible bytes", function()
+    test("Encodes/decodes strings of all possible bytes", function()
         for i = 0, 250 do
             testURL(string.char(i, i + 1, i + 2, i + 3, i + 4, i + 5))
         end

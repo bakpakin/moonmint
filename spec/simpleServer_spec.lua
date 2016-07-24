@@ -16,23 +16,14 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local server = require 'moonmint.server'
 local helper = require 'spec.helper'
-local agent = require 'moonmint.agent'
 
-describe("Simple server.", function()
+test("Simple server.", function()
 
-    it("Can run a basic echo server", function()
-        async()
-
-        local app = server():get('/', 'hi!')
-        helper.agentTester(app, function(tester)
-            local response = tester:get('/'):send()
-            assert.are.same(response.body, 'hi!')
-
-            app:close()
-            done()
-
+    test("Can run a basic echo server", function()
+        helper.agentTester(function(agent, app)
+            app:get('/', 'hi')
+            assert(helper.deepEquals(agent:get('/'):send().body, 'hi'))
         end)
     end)
 

@@ -1,4 +1,4 @@
-@import 'http://fonts.googleapis.com/css?family=Josefin+Sans|Rasa|Source+Code+Pro';
+@import 'http://fonts.googleapis.com/css?family=Rasa|Source+Code+Pro';
 html, body, div, span, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, address, cite, code,
@@ -65,7 +65,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Josefin Sans', serif;
+    font-family: 'Source Code Pro', monospace;
 }
 
 h1 {

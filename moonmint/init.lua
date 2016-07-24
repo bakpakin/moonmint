@@ -31,6 +31,13 @@ moonmint.html = require "moonmint.html"
 moonmint.response = require "moonmint.response"
 moonmint.agent = require "moonmint.agent"
 
+function moonmint.go(fn, ...)
+    if fn then
+        coroutine.wrap(fn)(...)
+    end
+    return require('luv').run()
+end
+
 function moonmint_mt.__call(_, ...)
     return server(...)
 end

@@ -20,25 +20,25 @@ local html = require 'moonmint.html'
 local helper = require 'spec.helper'
 local testHTML = helper.encode(html.encode, html.decode, assert)
 
-describe("HTML encoding/decoding", function()
+test("HTML encoding/decoding", function()
 
-    it("Encodes/decodes simple html strings.", function()
+    test("Encodes/decodes simple html strings.", function()
         testHTML("zyxwvut")
         testHTML("1233456")
     end)
 
-    it("Encodes/decodes strings with tags.", function()
+    test("Encodes/decodes strings with tags.", function()
         testHTML("zyxwvut<hi>akjsk</hi>")
         testHTML("1233456</div><div class=\"giggles\">")
     end)
 
-    it("Encodes/decodes all bytes.", function()
+    test("Encodes/decodes all bytes.", function()
         for i = 0, 255 do
             testHTML(string.char(i))
         end
     end)
 
-    it("Encodes/decodes strings of all bytes.", function()
+    test("Encodes/decodes strings of all bytes.", function()
         for i = 0, 250 do
             testHTML(string.char(i, i + 1, i + 2, i + 3, i + 4, i + 5))
         end
