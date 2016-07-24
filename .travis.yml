@@ -1,6 +1,6 @@
 language: python # Can use any language here, but if it's not 'python'
                  # it becomes necessary to pass '--user' to pip when installing hererocks.
-sudo: false      # Use container-based infrastructure.
+sudo: required
 
 env:
   - LUA="lua 5.1"
@@ -13,6 +13,7 @@ before_install:
   - pip install hererocks
   - hererocks env --$LUA -rlatest    # Use latest LuaRocks, install into 'env' directory.
   - source env/bin/activate          # Add directory with all installed binaries to PATH.
+  - sudo apt-get install -y cmake
 
 install:
   - lua genLocalRockspec.lua
