@@ -43,5 +43,5 @@ end
 
 return {
 	reader = reader,
-	writer = writer,
+	writer = writer
 }

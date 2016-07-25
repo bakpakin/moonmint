@@ -35,12 +35,59 @@ local httpHeaders = require 'moonmint.deps.http-headers'
 local url = require 'moonmint.url'
 local pathJoin = require 'moonmint.deps.pathjoin'.pathJoin
 local httpCodec = require 'moonmint.deps.httpCodec'
-local net = require 'moonmint.deps.coro-net'
-local setmetatable = setmetatable
+local coroWrap = require 'moonmint.deps.coro-wrapper'
+local wrapStream = require 'moonmint.deps.stream-wrap'
 local coxpcall = require 'coxpcall'
-local pcall = coxpcall.pcall
-local crunning = coxpcall.running
+local setmetatable = setmetatable
 local match = string.match
+
+local function makeCallback(timeout)
+    local thread = coxpcall.running()
+    local timer, done
+    if timeout then
+        timer = uv.new_timer()
+        timer:start(timeout, 0, function ()
+            if done then return end
+            done = true
+            timer:close()
+            return assert(coroutine.resume(thread, nil, "timeout"))
+        end)
+    end
+    return function (err, data)
+        if done then return end
+        done = true
+        if timer then timer:close() end
+        if err then
+            return assert(coroutine.resume(thread, nil, err))
+        end
+        return assert(coroutine.resume(thread, data or true))
+    end
+end
+
+local function connect(options)
+    local socket, success, err
+    success, err = uv.getaddrinfo(options.host, options.port, {
+        socktype = options.socktype or "stream",
+        family = options.family or "inet",
+    }, makeCallback(options.timeout))
+    if not success then return nil, err end
+    local res
+    res, err = coroutine.yield()
+    if not res then return nil, err end
+    socket = uv.new_tcp()
+    socket:connect(res[1].addr, res[1].port, makeCallback(options.timeout))
+    success, err = coroutine.yield()
+    if not success then return nil, err end
+    if options.tls then
+        local secureSocket = require('moonmint.deps.secure-socket')
+        socket, err = secureSocket(socket, options.tls)
+        if not socket then
+            return nil, err
+        end
+    end
+    local read, write, close = wrapStream(socket)
+    return read, write, socket, close
+end
 
 local connections = {}
 
@@ -67,13 +114,14 @@ local function getConnection(host, port, tls)
             end
         end
     end
-    local read, write, socket, updateDecoder, updateEncoder = assert(net.connect {
+    local read, write, socket, close = assert(connect {
         host = host,
         port = port,
-        tls = tls,
-        encode = httpCodec.encoder(),
-        decode = httpCodec.decoder()
+        tls = tls
     })
+    local updateDecoder, updateEncoder
+    read, updateDecoder = coroWrap.reader(read, httpCodec.decoder())
+    write, updateEncoder = coroWrap.writer(write, httpCodec.encoder())
     return {
         socket = socket,
         host = host,
@@ -268,36 +316,24 @@ end
 -- @param body the (optional) body of the request
 -- @return self
 function Agent:send(body)
-    local thread = crunning()
-    if thread then
-        return sendImpl(self, body)
-    else
-        local ret
-        local loop = true
-        coroutine.wrap(function()
-            ret = sendImpl(self, body)
-            loop = false
-        end)()
-        while loop do
-            uv.run('once')
-        end
-        return ret
-    end
+    return sendImpl(self, body)
 end
 
-function Agent:sendcb(body, cb)
-    if not cb then
-        cb = body
-        body = nil
-    end
-    return coroutine.wrap(function()
-        local status, err = pcall(sendImpl, self, body)
-        if status then
-            return cb(nil, err)
-        else
-            return cb(err)
-        end
+--- Send a request with the Agent, with an optional body.
+-- Block while waiting for a response.
+-- @param body the (optional) body of the request
+-- @return self
+function Agent:sendSync(body)
+    local ret, err
+    local loop = true
+    coroutine.wrap(function()
+        ret, err = sendImpl(self, body)
+        loop = false
     end)()
+    while loop do
+        uv.run('once')
+    end
+    return ret, err
 end
 
 --- Set a header to a certain value. Headers are case-insensitive.

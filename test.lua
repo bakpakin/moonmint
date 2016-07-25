@@ -1,9 +1,3 @@
--- Test hard reset for lua 5.1
-local coxpcall = require 'coxpcall'
-coroutine.running = coxpcall.running
-pcall = coxpcall.pcall
-xpcall = coxpcall.xpcall
-
 -- Expose the test function globally
 test = require 'tools.oft'
 

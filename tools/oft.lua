@@ -58,7 +58,7 @@ local function render(ast)
     if #errors > 0 then
         print(('\n%s%d Errors: \n'):format(RED, #errors))
         for i = 1, #errors do
-            print(i .. ': ' .. debug.traceback(errors[i]))
+            print(i .. ': ' .. errors[i].long)
         end
     end
     print(('\n%s%d%s Failed, %s%d%s Passed.'):format(
@@ -91,7 +91,10 @@ local function test(description, fn, errors)
     local errorIndex = #errors + 1
     progress(ok, errorIndex)
     if not ok then
-        errors[errorIndex] = err
+        errors[errorIndex] = {
+            short = err,
+            long = debug.traceback(err)
+        }
     end
     ast.result = {
         description = description,

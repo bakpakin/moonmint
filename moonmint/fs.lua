@@ -31,11 +31,12 @@ local uv = require 'luv'
 local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
 local fs = {}
+
+-- coxpcall shim
 local coxpcall = require 'coxpcall'
-local pcall = coxpcall.pcall
-local xpcall = coxpcall.xpcall
-local coresume = coroutine.resume
 local corunning = coxpcall.running
+
+local coresume = coroutine.resume
 local coyield = coroutine.yield
 
 local function noop() end
@@ -94,7 +95,7 @@ function fs.open(sync, path, flags, mode)
 end
 
 --- Wrapper around uv.fs_unlink
-function fs.unlink(syc, path)
+function fs.unlink(sync, path)
     local cb, context = makeCallback(sync)
     uv.fs_unlink(path, cb)
     return tryYield(context)
@@ -239,7 +240,7 @@ end
 
 --- Writes a string to a file. Overwrites the file
 -- if it already exists.
-function fs.writeFile(path, data, mkdir)
+function fs.writeFile(sync, path, data, mkdir)
     local fd, success, err
     fd, err = fs.open(sync, path, "w")
     if err then
@@ -255,7 +256,7 @@ function fs.writeFile(path, data, mkdir)
 end
 
 --- Append a string to a file.
-function fs.appendFile(path, data, mkdir)
+function fs.appendFile(sync, path, data, mkdir)
     local fd, success, err
     fd, err = fs.open(sync, path, "w+")
     if err then
@@ -271,12 +272,12 @@ function fs.appendFile(path, data, mkdir)
 end
 
 --- Make directories recursively. Similar to the UNIX `mkdir -p`.
-function fs.mkdirp(path, mode)
+function fs.mkdirp(sync, path, mode)
     local success, err = fs.mkdir(sync, path, mode)
     if success or err:match("^EEXIST") then
         return true
     end
-    if err:mathc("^ENOENT:") then
+    if err:match("^ENOENT:") then
         success, err = fs.mkdirp(sync, pathJoin(path, ".."), mode)
         if not success then return nil, err end
         return fs.mkdir(sync, path, mode)

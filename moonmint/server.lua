@@ -20,19 +20,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- @module moonmint.server
 
 local uv = require 'luv'
-local createServer = require('moonmint.deps.coro-net').createServer
 local httpCodec = require 'moonmint.deps.httpCodec'
 local router = require 'moonmint.router'
 local httpHeaders = require 'moonmint.deps.http-headers'
 local getHeaders = httpHeaders.getHeaders
-local response = require 'moonmint.response'
 local coroWrap = require 'moonmint.deps.coro-wrapper'
+local wrapStream = require('moonmint.deps.stream-wrap')
 
 local setmetatable = setmetatable
 local type = type
-local coxpcall = require 'coxpcall'
-local pcall = coxpcall.pcall
 local match = string.match
+local tostring = tostring
+
+local cp = require 'coxpcall'
+local pcall, xpcall, running = cp.pcall, cp.xpcall, cp.running
 
 local Server = {}
 local Server_mt = {
@@ -76,18 +77,17 @@ local function makeResponseHead(res)
     return head
 end
 
-local function onConnect(self, binding, rawRead, rawWrite, socket)
+local function onConnect(self, binding, socket)
+    local rawRead, rawWrite, close = wrapStream(socket)
     local read, updateDecoder = coroWrap.reader(rawRead, httpCodec.decoder())
     local write, updateEncoder = coroWrap.writer(rawWrite, httpCodec.encoder())
-    for head in read do
-
+    while true do
+        local head = read()
         if type(head) ~= 'table' then
             break
         end
-
         local url = head.path or ""
         local path, rawQuery = match(url, "^([^%?]*)[%?]?(.*)$")
-
         local req = {
             app = self,
             socket = socket,
@@ -98,58 +98,31 @@ local function onConnect(self, binding, rawRead, rawWrite, socket)
             rawQuery = rawQuery,
             binding = binding,
             read = read,
+            close = close,
             headers = getHeaders(head),
             version = head.version,
             keepAlive = head.keepAlive
         }
-
-        -- Catch errors
-        local status, res = pcall(self._router.doRoute, self._router, req)
-        if not status then
-            status, res = pcall(binding.errorHandler, res, req)
-            if not status then
-                socket:close()
-                break
-            end
-        end
-
-        -- Check response
-        if not res then
-            socket:close()
+        local res = self._router:doRoute(req)
+        if type(res) ~= 'table' then
             break
         end
-        if type(res) ~= 'table' then
-            status, res = pcall(response, res)
-            if not status then
-                status, res = pcall(binding.errorHandler,
-                'expected table as response', req)
-                if not status then
-                    break
-                end
-            end
-            if not res or type(res) ~= 'table' then
-                break
-            end
-        end
-
         -- Write response
         write(makeResponseHead(res))
         local body = res.body
         write(body and tostring(body) or nil)
         write()
-
         -- Drop non-keepalive and unhandled requets
         if not (res.keepAlive and head.keepAlive) then
             break
         end
-
         -- Handle upgrade requests
         if res.upgrade then
-            pcall(res.upgrade, read, write, updateDecoder, updateEncoder, socket)
+            res.upgrade(read, write, updateDecoder, updateEncoder, socket)
             break
         end
-
     end
+    return close()
 end
 
 function Server:bind(options)
@@ -174,13 +147,14 @@ function Server:close()
     end
 end
 
-local function defaultErrorHandler(err)
-    local fullError = 'Internal Sever Error:\n' .. debug.traceback(err)
-    print(fullError)
-    return {
-        code = 500,
-        body = fullError
-    }
+local function addOnStart(fn, a, b)
+    if fn then
+        local timer = uv.new_timer()
+        timer:start(0, 0, coroutine.wrap(function()
+            timer:close()
+            return fn(a, b)
+        end))
+    end
 end
 
 function Server:startLater(options)
@@ -194,44 +168,32 @@ function Server:startLater(options)
     for i = 1, #bindings do
         local binding = bindings[i]
         local tls = binding.tls or options.tls
+        local socketWrap
         if tls then
-            binding.tls = {
-                key = tls.key,
-                cert = tls.cert
-            }
+            local secureSocket = require('moonmint.deps.secure-socket')
+            socketWrap = function(x) return assert(secureSocket(x, tls)) end
+        else
+            socketWrap = function(x) return x end
         end
-        local callback = function(...) return onConnect(self, binding, ...) end
-
-        -- Set request error handler unless explicitely disabled
-        if binding.errorHandler ~= false then
-            if options.errorHandler ~= false then
-                binding.errorHandler = binding.errorHandler or
-                    options.errorHandler or
-                    defaultErrorHandler
-            end
-        end
-
-        -- Create server with coro-net
-        table.insert(self.netServers, createServer(binding, callback))
-        local onStart = binding.onStart
-        if onStart then
-            local timer = uv.new_timer()
-            timer:start(0, 0, coroutine.wrap(function()
-                onStart(self, binding)
-                timer:close()
-            end))
-        end
-    end
-
-    local onStart = options.onStart
-    if onStart then
-        local timer = uv.new_timer()
-        timer:start(0, 0, coroutine.wrap(function()
-            onStart(self)
-            timer:close()
+        local server = uv.new_tcp()
+        table.insert(self.netServers, server)
+        assert(server:bind(binding.host, binding.port))
+        assert(server:listen(256, function(err)
+            assert(not err, err)
+            local socket = uv.new_tcp()
+            server:accept(socket)
+            coroutine.wrap(function()
+                local success, fail = pcall(function()
+                    return onConnect(self, binding, socketWrap(socket))
+                end)
+                if not success then
+                    print(fail)
+                end
+            end)()
         end))
+        addOnStart(binding.onStart, self, binding)
     end
-
+    addOnStart(options.onStart, self)
     return self
 end
 
