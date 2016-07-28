@@ -38,6 +38,7 @@ local find = string.find
 local format = string.format
 local concat = table.concat
 local match = string.match
+local unpack = unpack or table.unpack
 
 local STATUS_CODES = {
   [100] = 'Continue',

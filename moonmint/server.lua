@@ -31,6 +31,9 @@ local setmetatable = setmetatable
 local type = type
 local match = string.match
 local tostring = tostring
+local assert = assert
+local xpcall = xpcall
+local wrap = coroutine.wrap
 
 local Server = {}
 local Server_mt = {
@@ -173,27 +176,42 @@ function Server:startLater(options)
             socketWrap = function(x) return x end
         end
         local server = uv.new_tcp()
-        local onErr = binding.errHand or options.errHand or debug.traceback
+        -- Set the err handler. False explicitely disables it.
+        local onErr = binding.errHand
+        if onErr == nil then
+            onErr = options.errHand
+            if onErr == nil then
+                onErr = debug and debug.traceback
+            end
+        end
         table.insert(self.netServers, server)
         assert(server:bind(binding.host, binding.port))
         assert(server:listen(256, function(err)
             assert(not err, err)
             local socket = uv.new_tcp()
             server:accept(socket)
-            coroutine.wrap(function()
-                return xpcall(function()
+            wrap(function()
+                if onErr then
+                    return xpcall(function()
+                        return onConnect(self, binding, socketWrap(socket))
+                    end, onErr)
+                else
                     return onConnect(self, binding, socketWrap(socket))
-                end, onErr)
+                end
             end)()
         end))
         addOnStart(binding.onStart, self, binding)
     end
     addOnStart(options.onStart, self)
+    self._startPending = true
     return self
 end
 
 function Server:start(options)
-    self:startLater(options)
+    if not self._startPending then
+        self:startLater(options)
+        self._startPending = false
+    end
     uv.run()
     return self
 end

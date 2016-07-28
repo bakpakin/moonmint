@@ -52,7 +52,9 @@ end
 local function agentTester(cb)
     local moonmint = require 'moonmint'
     local agent = require 'moonmint.agent'
-    local testServer = moonmint():startLater()
+    local testServer = moonmint():startLater {
+        errHand = false
+    }
     local testAgent = agent:url('http://localhost:8080'):module()
     local ok, err
     moonmint.go(function()
