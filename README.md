@@ -16,6 +16,7 @@ Check out the [wiki](https://github.com/bakpakin/moonmint/wiki) for more informa
 * Middleware
 * Static file server
 * Nonblocking operations with coroutines and libuv
+* Supports Lua 5.2, 5.3, LuaJIT 2.0, LuaJIT 2.1
 * Powerful asynchronous agent for making HTTP requests
 * Templating engine
 
