@@ -14,7 +14,6 @@ dependencies = {
     "luv ~> 1.8",
     "mimetypes >= 1.0",
     "bkopenssl >= 0.0",
-    "coxpcall >= 1.15",
     "bit32"
 }
 build = {

@@ -17,14 +17,13 @@ limitations under the License.
 --]]
 local getContext = require('moonmint.deps.secure-socket.context')
 local bioWrap = require('moonmint.deps.secure-socket.biowrap')
-local coxpcall = require 'coxpcall'
 
 return function (socket, options, callback)
   if options == true then options = {} end
   local ctx = getContext(options)
   local thread
   if not callback then
-    thread = coxpcall.running()
+    thread = coroutine.running()
   end
   bioWrap(ctx, options.server, socket, callback or function (err, ssocket)
     return assert(coroutine.resume(thread, ssocket, err))

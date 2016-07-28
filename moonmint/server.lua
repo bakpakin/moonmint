@@ -25,15 +25,12 @@ local router = require 'moonmint.router'
 local httpHeaders = require 'moonmint.deps.http-headers'
 local getHeaders = httpHeaders.getHeaders
 local coroWrap = require 'moonmint.deps.coro-wrapper'
-local wrapStream = require('moonmint.deps.stream-wrap')
+local wrapStream = require 'moonmint.deps.stream-wrap'
 
 local setmetatable = setmetatable
 local type = type
 local match = string.match
 local tostring = tostring
-
-local cp = require 'coxpcall'
-local pcall, xpcall, running = cp.pcall, cp.xpcall, cp.running
 
 local Server = {}
 local Server_mt = {
@@ -176,6 +173,7 @@ function Server:startLater(options)
             socketWrap = function(x) return x end
         end
         local server = uv.new_tcp()
+        local onErr = binding.errHand or options.errHand or debug.traceback
         table.insert(self.netServers, server)
         assert(server:bind(binding.host, binding.port))
         assert(server:listen(256, function(err)
@@ -183,12 +181,9 @@ function Server:startLater(options)
             local socket = uv.new_tcp()
             server:accept(socket)
             coroutine.wrap(function()
-                local success, fail = pcall(function()
+                return xpcall(function()
                     return onConnect(self, binding, socketWrap(socket))
-                end)
-                if not success then
-                    print(fail)
-                end
+                end, onErr)
             end)()
         end))
         addOnStart(binding.onStart, self, binding)

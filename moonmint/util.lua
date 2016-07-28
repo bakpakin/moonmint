@@ -24,8 +24,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local uv = require 'luv'
 local format = string.format
 local concat = table.concat
-local coxpcall = require 'coxpcall'
-local pcall = coxpcall.pcall
 local queryDecode = require('moonmint.url').queryDecode
 
 local util = {}

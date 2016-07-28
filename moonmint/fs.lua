@@ -32,10 +32,7 @@ local pathJoin = require('moonmint.deps.pathjoin').pathJoin
 
 local fs = {}
 
--- coxpcall shim
-local coxpcall = require 'coxpcall'
-local corunning = coxpcall.running
-
+local corunning = coroutine.running
 local coresume = coroutine.resume
 local coyield = coroutine.yield
 

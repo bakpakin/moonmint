@@ -37,12 +37,12 @@ local pathJoin = require 'moonmint.deps.pathjoin'.pathJoin
 local httpCodec = require 'moonmint.deps.httpCodec'
 local coroWrap = require 'moonmint.deps.coro-wrapper'
 local wrapStream = require 'moonmint.deps.stream-wrap'
-local coxpcall = require 'coxpcall'
 local setmetatable = setmetatable
 local match = string.match
 
+-- Pulled from coro-net
 local function makeCallback(timeout)
-    local thread = coxpcall.running()
+    local thread = coroutine.running()
     local timer, done
     if timeout then
         timer = uv.new_timer()
