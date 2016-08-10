@@ -286,13 +286,13 @@ end
 local function makeAliases(module)
     local ext = {}
     local sync = {}
-    for k, v in pairs(fs) do
+    for k, v in pairs(module) do
         if type(v) == 'function' then
             sync[k] = function(...)
                 return v(true, ...)
             end
             ext[k] = v
-            fs[k] = function(...)
+            module[k] = function(...)
                 return v(false, ...)
             end
         end
