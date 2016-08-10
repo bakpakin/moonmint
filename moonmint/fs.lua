@@ -284,6 +284,7 @@ end
 
 -- Make sync and async versions
 local function makeAliases(module)
+    local ret = {}
     local ext = {}
     local sync = {}
     for k, v in pairs(module) do
@@ -292,15 +293,15 @@ local function makeAliases(module)
                 return v(true, ...)
             end
             ext[k] = v
-            module[k] = function(...)
+            ret[k] = function(...)
                 return v(false, ...)
             end
         end
     end
-    module.s = sync
-    module.sync = sync
-    module.ext = ext
-    return module
+    ret.s = sync
+    ret.sync = sync
+    ret.ext = ext
+    return ret
 end
 
 --- Creates a clone of fs, but with a different base directory.
