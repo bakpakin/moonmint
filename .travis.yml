@@ -1,0 +1,35 @@
+language: python # Can use any language here, but if it's not 'python'
+                 # it becomes necessary to pass '--user' to pip when installing hererocks.
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - cmake
+    sources:
+      - kalakris-cmake
+
+env:
+  - LUA="lua 5.2"
+  - LUA="lua 5.3"
+  - LUA="luajit 2.0"
+  - LUA="luajit 2.1"
+
+before_install:
+  - pip install hererocks
+  - hererocks env --$LUA -rlatest    # Use latest LuaRocks, install into 'env' directory.
+  - source env/bin/activate          # Add directory with all installed binaries to PATH.
+
+install:
+  - lua genLocalRockspec.lua
+  - luarocks make # Install the rock, assuming there is a rockspec
+
+script:
+  - lua test.lua
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+
+dist: trusty

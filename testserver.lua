@@ -1,11 +1,9 @@
-local moonmint = require(".")
+local moonmint = require('moonmint')
+
 local app = moonmint()
 
-app:use(moonmint.logger, moonmint.static("."))
-
-app:get("/", function(req, res)
-    print("Raw Query: ", req.rawQuery)
-    res:send("Hello, World!")
-end)
+app:get('/', 'Hello, Lua 5.3')
 
 app:start()
+
+print "Hello, Lua 5.3!"
