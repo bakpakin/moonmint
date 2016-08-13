@@ -204,12 +204,6 @@ function Server:startLater(options)
     end
     addOnStart(options.onStart, self)
     self._startPending = true
-    -- Add SIGINT handler for Lua 5.2 to prevent stalling
-    -- until the next request. Not sure why this only happens in Lua5.2
-    uv.new_signal():start('sigint', function(reason)
-        print(reason)
-        os.exit()
-    end)
     return self
 end
 
