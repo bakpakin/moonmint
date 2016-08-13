@@ -122,8 +122,6 @@ local function onConnect(self, binding, socket)
             break
         end
     end
-    read()
-    write()
     return close()
 end
 
@@ -206,11 +204,6 @@ function Server:startLater(options)
     end
     addOnStart(options.onStart, self)
     self._startPending = true
-    -- Force exit on Lua 5.2
-    uv.new_signal():start("sigint", function()
-        self:close()
-        os.exit()
-    end)
     return self
 end
 
