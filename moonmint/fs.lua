@@ -289,12 +289,16 @@ local function makeAliases(module)
     local sync = {}
     for k, v in pairs(module) do
         if type(v) == 'function' then
-            sync[k] = function(...)
-                return v(true, ...)
-            end
-            ext[k] = v
-            ret[k] = function(...)
-                return v(false, ...)
+            if k == 'chroot' then
+                sync[k], ext[k], ret[k] = v, v, v
+            else
+                sync[k] = function(...)
+                    return v(true, ...)
+                end
+                ext[k] = v
+                ret[k] = function(...)
+                    return v(false, ...)
+                end
             end
         end
     end
