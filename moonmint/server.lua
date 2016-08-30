@@ -168,10 +168,14 @@ function Server:startLater(options)
     for i = 1, #bindings do
         local binding = bindings[i]
         local tls = binding.tls or options.tls
+        binding.tls = not not tls
         local socketWrap
         if tls then
             local secureSocket = require('moonmint.deps.secure-socket')
-            socketWrap = function(x) return assert(secureSocket(x, tls)) end
+            local tlsOptions = {}
+            for k, v in pairs(tls) do tlsOptions[k] = v end
+            tlsOptions.server = true
+            socketWrap = function(x) return assert(secureSocket(x, tlsOptions)) end
         else
             socketWrap = function(x) return x end
         end
