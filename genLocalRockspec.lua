@@ -13,7 +13,6 @@ dependencies = {
     "lua >= 5.1",
     "luv ~> 1.8",
     "mimetypes >= 1.0",
-    "bkopenssl >= 0.0",
     "bit32"
 }
 build = {

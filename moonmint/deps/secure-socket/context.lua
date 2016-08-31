@@ -15,8 +15,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 --]]
-local openssl = require('openssl')
-local pcall = pcall
+local openssl
+do
+    local ok
+    ok, openssl = pcall(require, 'openssl')
+    if not ok then
+        error 'Could not find package "openssl". Install it from luarocks, or install bkopenssl.'
+    end
+end
 
 local bit
 do
