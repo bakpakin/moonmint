@@ -22,6 +22,7 @@ build = {
         ["moonmint"] = "moonmint/init.lua",
 
         ["moonmint.agent"] = "moonmint/agent.lua",
+        ["moonmint.cookies"] = "moonmint/cookies.lua",
         ["moonmint.fs"] = "moonmint/fs.lua",
         ["moonmint.html"] = "moonmint/html.lua",
         ["moonmint.response"] = "moonmint/response.lua",
