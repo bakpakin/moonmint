@@ -4,7 +4,6 @@
 * Add testing for server code
 * Add more testing in general
 * Remove some luvit and lit libraries depenencies (httpCodec, coro-net, maybe secure socket.)
-* Cookie utilities
 * Etags, either only with static or as utility middleware (or both).
 * View engine that is integrated with built in templates, but can eventually use others like etlua. Partials support.
 * Better documentation, preferably LuaDoc like (source generated) or on the wiki. Add docs as we go.

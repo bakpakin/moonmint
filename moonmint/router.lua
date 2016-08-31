@@ -50,7 +50,7 @@ local function compileHost(hostPattern)
     -- Escape everything except globs
     local pat = gsub(hostPattern, "[%%%^%$%(%)%.%[%]%+%-%?]", "%%%1")
     pat = gsub(pat, "%*%*", ".+")
-    pat = gsub(pat, "%*", "[^%.]+")
+    pat = gsub(pat, "%*", "[^%%.]+")
     return function(str)
         return #match(str, pat) > 0
     end
