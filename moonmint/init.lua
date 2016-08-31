@@ -30,6 +30,7 @@ moonmint.url = require "moonmint.url"
 moonmint.html = require "moonmint.html"
 moonmint.response = require "moonmint.response"
 moonmint.agent = require "moonmint.agent"
+moonmint.cookie = require "moonmint.cookie"
 
 function moonmint.go(fn, ...)
     if fn then
