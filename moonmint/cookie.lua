@@ -101,9 +101,6 @@ local function parseCookie(str)
     return ret
 end
 
-local inspect = require('inspect')
-print(inspect(parseCookie ' key = value '))
-
 local function makeSetCookie(options)
     assert(cookie.value, 'Expected cookie value.')
     local str = (cookie.key and (cookie.key .. '=') or '') .. cookie.value
