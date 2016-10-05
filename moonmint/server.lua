@@ -161,10 +161,13 @@ function Server:startLater(options)
     if not options then
         options = {}
     end
-    local bindings = self.bindings
-    if #bindings < 1 then
+    if options.port or options.host then
+        self:bind(options)
+    end
+    if #self.bindings < 1 then
         self:bind()
     end
+    local bindings = self.bindings
     for i = 1, #bindings do
         local binding = bindings[i]
         local tls = binding.tls or options.tls
@@ -185,7 +188,7 @@ function Server:startLater(options)
         if onErr == nil then
             onErr = options.errHand
             if onErr == nil then
-                onErr = debug and debug.traceback
+                onErr = debug and debug.traceback or print
             end
         end
         table.insert(self.netServers, server)
