@@ -1,7 +1,5 @@
 # moonmint
 
-NOTE: moonmint is a Work In Progress. API is not stable.
-
 ![Travis](https://travis-ci.org/bakpakin/moonmint.svg?branch=master)
 
 __moonmint__ is an HTTP web framework for Lua.
