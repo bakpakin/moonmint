@@ -157,5 +157,5 @@ return {
     parse = parseCookie,
     makeSet = makeSetCookie,
     middleware = middleware,
-    defualtMiddleware = middleware()
+    defaultMiddleware = middleware()
 }
