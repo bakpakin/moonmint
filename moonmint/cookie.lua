@@ -102,16 +102,16 @@ local function parseCookie(str)
 end
 
 local function makeSetCookie(options)
-    assert(cookie.value, 'Expected cookie value.')
-    local str = (cookie.key and (cookie.key .. '=') or '') .. cookie.value
-        .. (cookie.expires and '; Expires=' .. cookie.expires or '')
-        .. (cookie.maxAge and '; Max-Age=' .. cookie.max_age or '')
-        .. (cookie.domain and '; Domain=' .. cookie.domain or '')
-        .. (cookie.path and '; Path=' .. cookie.path or '')
-        .. (cookie.secure and '; Secure' or '')
-        .. (cookie.httpOnly and '; HttpOnly' or '')
-        .. (cookie.sameSite and '; SameSite=' .. cookie.sameSite or '')
-        .. (cookie.extension and '; ' .. cookie.extension or '')
+    assert(options.value, 'Expected cookie value.')
+    local str = (options.key and (options.key .. '=') or '') .. options.value
+        .. (options.expires and '; Expires=' .. options.expires or '')
+        .. (options.maxAge and '; Max-Age=' .. options.max_age or '')
+        .. (options.domain and '; Domain=' .. options.domain or '')
+        .. (options.path and '; Path=' .. options.path or '')
+        .. (options.secure and '; Secure' or '')
+        .. (options.httpOnly and '; HttpOnly' or '')
+        .. (options.sameSite and '; SameSite=' .. options.sameSite or '')
+        .. (options.extension and '; ' .. options.extension or '')
     return str
 end
 
